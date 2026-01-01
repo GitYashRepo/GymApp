@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "GymApp",
-    "slug": "GymApp",
+    "name": "sardinaz",
+    "slug": "sardinaz",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "gymapp",
+    "scheme": "sardinaz",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
