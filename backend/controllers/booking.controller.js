@@ -65,7 +65,7 @@ exports.getPodAvailability = async (req, res) => {
     const bookings = await Booking.find({
       gymPod: podId,
       startTime: { $gte: dayStart, $lte: dayEnd },
-      status: "booked"
+      status: "pending_payment"
     });
 
     res.status(200).json({
@@ -137,6 +137,50 @@ exports.cancelBooking = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Booking cancelled"
+    });
+
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+/**
+ * UPLOAD PAYMENT SCREENSHOT
+ * PATCH /api/bookings/:id/upload-payment
+ */
+exports.uploadPaymentProof = async (req, res) => {
+  try {
+    const booking = await Booking.findOne({
+      _id: req.params.id,
+      user: req.user.id
+    });
+
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    if (booking.status !== "pending_payment") {
+      return res.status(400).json({
+        message: "Payment already uploaded or booking processed"
+      });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ message: "Payment screenshot required" });
+    }
+
+    booking.paymentProof = {
+      image: `/uploads/payments/${req.file.filename}`,
+      uploadedAt: new Date()
+    };
+
+    booking.status = "payment_uploaded";
+
+    await booking.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Payment proof uploaded successfully"
     });
 
   } catch (err) {

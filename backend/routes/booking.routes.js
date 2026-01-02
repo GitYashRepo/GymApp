@@ -5,15 +5,31 @@ const {
   createBooking,
   getPodAvailability,
   getMyBookings,
-  cancelBooking
+  cancelBooking,
+  uploadPaymentProof
 } = require("../controllers/booking.controller");
 
 const { protect } = require("../middlewares/auth.middleware");
+const upload = require("../middlewares/upload.middleware");
 
-// User routes
+// Create booking (pending)
 router.post("/", protect, createBooking);
+
+// Upload payment screenshot
+router.patch(
+  "/:id/upload-payment",
+  protect,
+  upload.single("payment"),
+  uploadPaymentProof
+);
+
+// Availability
 router.get("/availability/:podId", getPodAvailability);
+
+// User bookings
 router.get("/my", protect, getMyBookings);
+
+// Cancel
 router.patch("/:id/cancel", protect, cancelBooking);
 
 module.exports = router;
