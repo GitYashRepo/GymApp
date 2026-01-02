@@ -44,15 +44,15 @@ export default function ClassesScreen() {
                      <Text style={styles.className}>{item.name}</Text>
                      <Text style={styles.instructor}>Instructor: {item.instructor}</Text>
                      <View style={styles.detailsRow}>
-                        <MaterialCommunityIcons name="clock" size={16} color="#FFD500" />
+                        <MaterialCommunityIcons name="clock" size={16} color="#FF6D00" />
                         <Text style={styles.detail}>{item.time}</Text>
                      </View>
                      <View style={styles.detailsRow}>
-                        <MaterialCommunityIcons name="timer" size={16} color="#FFD500" />
+                        <MaterialCommunityIcons name="timer" size={16} color="#FF6D00" />
                         <Text style={styles.detail}>{item.duration}</Text>
                      </View>
                      <View style={styles.detailsRow}>
-                        <MaterialCommunityIcons name="account-multiple" size={16} color="#FFD500" />
+                        <MaterialCommunityIcons name="account-multiple" size={16} color="#FF6D00" />
                         <Text style={styles.detail}>{item.capacity}</Text>
                      </View>
                      <TouchableOpacity style={styles.enrollBtn}>
@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
    className: {
       fontSize: 16,
       fontWeight: "700",
-      color: "#FFD500",
+      color: "#FF6D00",
       marginBottom: 6,
    },
    instructor: {
@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
       marginLeft: 8,
    },
    enrollBtn: {
-      backgroundColor: "#FFD500",
+      backgroundColor: "#FF6D00",
       paddingVertical: 12,
       borderRadius: 20,
       alignItems: "center",

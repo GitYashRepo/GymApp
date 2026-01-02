@@ -35,7 +35,7 @@ export default function SideNavBar({ isOpen, onClose }) {
             <View style={styles.header}>
                <Text style={styles.headerTitle}>The Gym Pod</Text>
                <TouchableOpacity onPress={onClose} activeOpacity={0.7}>
-                  <MaterialCommunityIcons name="close" size={28} color="#FFD500" />
+                  <MaterialCommunityIcons name="close" size={28} color="#FF6D00" />
                </TouchableOpacity>
             </View>
 
@@ -47,7 +47,7 @@ export default function SideNavBar({ isOpen, onClose }) {
                      onPress={() => handleMenuItemPress(item.route)}
                      activeOpacity={0.7}
                   >
-                     <MaterialCommunityIcons name={item.icon} size={24} color="#FFD500" />
+                     <MaterialCommunityIcons name={item.icon} size={24} color="#FF6D00" />
                      <Text style={styles.menuLabel}>{item.label}</Text>
                   </TouchableOpacity>
                ))}
@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
    headerTitle: {
       fontSize: 20,
       fontWeight: "700",
-      color: "#FFD500",
+      color: "#FF6D00",
    },
    menuContainer: {
       flex: 1,

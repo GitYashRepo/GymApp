@@ -17,7 +17,7 @@ export default function PodsScreen() {
    return (
       <SafeAreaView style={styles.container}>
          <View style={styles.searchContainer}>
-            <MaterialCommunityIcons name="magnify" size={20} color="#FFD500" style={styles.searchIcon} />
+            <MaterialCommunityIcons name="magnify" size={20} color="#FF6D00" style={styles.searchIcon} />
             <TextInput placeholder="Search Pods..." placeholderTextColor="#999" style={styles.searchInput} />
          </View>
 
@@ -29,7 +29,7 @@ export default function PodsScreen() {
                   <View style={styles.imageContainer}>
                      <Image source={{ uri: item.images[0] }} style={styles.image} />
                      <TouchableOpacity style={styles.infoBtn}>
-                        <MaterialCommunityIcons name="information" size={16} color="#FFD500" />
+                        <MaterialCommunityIcons name="information" size={16} color="#FF6D00" />
                      </TouchableOpacity>
                   </View>
 
@@ -112,10 +112,10 @@ const styles = StyleSheet.create({
       justifyContent: "center",
       alignItems: "center",
       borderWidth: 2,
-      borderColor: "#FFD500",
+      borderColor: "#FF6D00",
    },
    capacityBar: {
-      backgroundColor: "#FFD500",
+      backgroundColor: "#FF6D00",
       paddingVertical: 10,
       paddingHorizontal: 12,
       flexDirection: "row",
@@ -140,17 +140,17 @@ const styles = StyleSheet.create({
    locationName: {
       fontSize: 16,
       fontWeight: "600",
-      color: "#FFD500",
+      color: "#FF6D00",
       marginBottom: 6,
    },
    price: {
       fontSize: 14,
-      color: "#FFD500",
+      color: "#FF6D00",
       fontWeight: "600",
       marginBottom: 12,
    },
    bookBtn: {
-      backgroundColor: "#FFD500",
+      backgroundColor: "#FF6D00",
       paddingVertical: 12,
       borderRadius: 20,
       alignItems: "center",

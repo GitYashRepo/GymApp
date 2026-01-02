@@ -28,7 +28,7 @@ export default function TopNavBar({ onMenuPress, onFilterPress }) {
 
 const styles = StyleSheet.create({
    header: {
-      backgroundColor: "#FFD500",
+      backgroundColor: "#FF6D00",
       paddingTop: 35,
       paddingBottom: 10,
       paddingHorizontal: 20,

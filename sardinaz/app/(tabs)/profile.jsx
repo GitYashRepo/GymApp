@@ -40,7 +40,7 @@ export default function ProfileScreen() {
             <View style={styles.statsContainer}>
                {stats.map((stat, index) => (
                   <View key={index} style={styles.statItem}>
-                     <MaterialCommunityIcons name={stat.icon} size={24} color="#FFD500" />
+                     <MaterialCommunityIcons name={stat.icon} size={24} color="#FF6D00" />
                      <Text style={styles.statValue}>{stat.value}</Text>
                      <Text style={styles.statLabel}>{stat.label}</Text>
                   </View>
@@ -51,7 +51,7 @@ export default function ProfileScreen() {
             <View style={styles.menuSection}>
                {menuOptions.map((option, index) => (
                   <TouchableOpacity key={index} style={styles.menuOption} activeOpacity={0.7}>
-                     <MaterialCommunityIcons name={option.icon} size={20} color="#FFD500" />
+                     <MaterialCommunityIcons name={option.icon} size={20} color="#FF6D00" />
                      <Text style={styles.menuLabel}>{option.label}</Text>
                      <MaterialCommunityIcons name="chevron-right" size={20} color="#666" />
                   </TouchableOpacity>
@@ -88,12 +88,12 @@ const styles = StyleSheet.create({
       borderRadius: 50,
       marginBottom: 12,
       borderWidth: 3,
-      borderColor: "#FFD500",
+      borderColor: "#FF6D00",
    },
    name: {
       fontSize: 22,
       fontWeight: "700",
-      color: "#FFD500",
+      color: "#FF6D00",
       marginBottom: 4,
    },
    email: {
@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
    statValue: {
       fontSize: 20,
       fontWeight: "700",
-      color: "#FFD500",
+      color: "#FF6D00",
       marginVertical: 4,
    },
    statLabel: {

@@ -211,12 +211,12 @@ const styles = StyleSheet.create({
       borderRadius: 20,
       backgroundColor: "#333",
       borderWidth: 2,
-      borderColor: "#FFD700",
+      borderColor: "#FF6D00",
       justifyContent: "center",
       alignItems: "center",
    },
    capacityBar: {
-      backgroundColor: "#FFD700",
+      backgroundColor: "#FF6D00",
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
    locationName: {
       fontSize: 18,
       fontWeight: "bold",
-      color: "#FFD700",
+      color: "#FF6D00",
       marginBottom: 8,
    },
    addressRow: {
@@ -253,7 +253,7 @@ const styles = StyleSheet.create({
    },
    priceText: {
       fontSize: 14,
-      color: "#FFD700",
+      color: "#FF6D00",
       fontWeight: "bold",
       marginBottom: 8,
    },
@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
       marginBottom: 12,
    },
    bookButton: {
-      backgroundColor: "#FFD700",
+      backgroundColor: "#FF6D00",
       paddingVertical: 12,
       borderRadius: 20,
       alignItems: "center",

@@ -39,7 +39,7 @@ export default function TabLayout() {
       const isActive = activeTab === name
       return (
          <TouchableOpacity style={styles.navItem} onPress={() => handleTabPress(name)} activeOpacity={0.7}>
-            <MaterialCommunityIcons name={iconName} size={24} color={isActive ? "#FFD500" : "#999"} />
+            <MaterialCommunityIcons name={iconName} size={24} color={isActive ? "#FF6D00" : "#999"} />
             <Text style={[styles.navLabel, isActive && styles.navLabelActive]}>{label}</Text>
          </TouchableOpacity>
       )
@@ -141,6 +141,6 @@ const styles = StyleSheet.create({
       marginTop: 4,
    },
    navLabelActive: {
-      color: "#FFD500",
+      color: "#FF6D00",
    },
 })

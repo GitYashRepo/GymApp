@@ -26,7 +26,7 @@ export default function LanguageModal({ isVisible, onClose, onSelectLanguage }) 
                   <View style={styles.modalHeader}>
                      <Text style={styles.modalTitle}>Select Language</Text>
                      <TouchableOpacity onPress={onClose} activeOpacity={0.7}>
-                        <MaterialCommunityIcons name="close" size={24} color="#FFD500" />
+                        <MaterialCommunityIcons name="close" size={24} color="#FF6D00" />
                      </TouchableOpacity>
                   </View>
 
@@ -40,7 +40,7 @@ export default function LanguageModal({ isVisible, onClose, onSelectLanguage }) 
                         >
                            <Text style={styles.flag}>{lang.flag}</Text>
                            <Text style={styles.languageLabel}>{lang.label}</Text>
-                           <MaterialCommunityIcons name="chevron-right" size={20} color="#FFD500" />
+                           <MaterialCommunityIcons name="chevron-right" size={20} color="#FF6D00" />
                         </TouchableOpacity>
                      ))}
                   </View>
@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
    modalTitle: {
       fontSize: 18,
       fontWeight: "700",
-      color: "#FFD500",
+      color: "#FF6D00",
    },
    languageList: {
       paddingVertical: 12,

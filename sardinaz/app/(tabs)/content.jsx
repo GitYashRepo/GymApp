@@ -42,7 +42,7 @@ export default function ContentScreen() {
                <TouchableOpacity style={styles.contentCard} activeOpacity={0.7}>
                   <Image source={{ uri: item.image }} style={styles.contentImage} />
                   <View style={styles.contentOverlay}>
-                     <MaterialCommunityIcons name="play-circle" size={48} color="#FFD500" />
+                     <MaterialCommunityIcons name="play-circle" size={48} color="#FF6D00" />
                   </View>
                   <View style={styles.contentInfo}>
                      <View style={styles.typeBadge}>
@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
       paddingVertical: 12,
    },
    typeBadge: {
-      backgroundColor: "#FFD500",
+      backgroundColor: "#FF6D00",
       alignSelf: "flex-start",
       paddingHorizontal: 10,
       paddingVertical: 4,
@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
    contentTitle: {
       fontSize: 16,
       fontWeight: "700",
-      color: "#FFD500",
+      color: "#FF6D00",
       marginBottom: 4,
    },
    contentDescription: {
