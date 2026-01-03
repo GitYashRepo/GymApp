@@ -1,30 +1,42 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit"
+import api from "../services/api"
 
-const API = 'http://YOUR_BACKEND_IP:5000/api';
-
-export const fetchPods = createAsyncThunk(
-  'pods/fetch',
-  async () => {
-    const res = await axios.get(`${API}/pods/home`);
-    return res.data.data;
+export const fetchHomePods = createAsyncThunk(
+  "pods/fetchHome",
+  async (_, thunkAPI) => {
+    try {
+      const res = await api.get("/pods/home")
+      return res.data
+    } catch (err) {
+      return thunkAPI.rejectWithValue(err.response.data.message)
+    }
   }
-);
+)
+
+export const createGymPod = createAsyncThunk(
+  "pods/create",
+  async (podData, thunkAPI) => {
+    try {
+      const res = await api.post("/pods", podData)
+      return res.data
+    } catch (err) {
+      return thunkAPI.rejectWithValue(err.response.data.message)
+    }
+  }
+)
 
 const podSlice = createSlice({
-  name: 'pods',
+  name: "pods",
   initialState: {
-    list: [],
+    pods: [],
     loading: false,
   },
-  extraReducers: builder => {
+  extraReducers: (builder) => {
     builder
-      .addCase(fetchPods.pending, s => { s.loading = true })
-      .addCase(fetchPods.fulfilled, (s, a) => {
-        s.loading = false;
-        s.list = a.payload;
-      });
-  }
-});
+      .addCase(fetchHomePods.fulfilled, (state, action) => {
+        state.pods = action.payload
+      })
+  },
+})
 
-export default podSlice.reducer;
+export default podSlice.reducer

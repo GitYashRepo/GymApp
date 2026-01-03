@@ -1,6 +1,7 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Provider } from 'react-redux';
-import { store } from '../store';
+import { PersistGate } from "redux-persist/integration/react"
+import { store, persistor } from '../store';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
@@ -16,13 +17,15 @@ export default function RootLayout() {
 
    return (
       <Provider store={store}>
-         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-            <Stack>
-               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-               <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-            </Stack>
-            <StatusBar style="auto" />
-         </ThemeProvider>
+         <PersistGate loading={null} persistor={persistor}>
+            <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+               <Stack>
+                  <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                  <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+               </Stack>
+               <StatusBar style="auto" />
+            </ThemeProvider>
+         </PersistGate>
       </Provider>
    );
 }
