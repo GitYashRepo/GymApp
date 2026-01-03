@@ -1,60 +1,111 @@
-import { View, TouchableOpacity, Text, StyleSheet, Modal } from "react-native"
-import { MaterialCommunityIcons } from "@expo/vector-icons"
-import * as Haptics from "expo-haptics"
+import { View, TouchableOpacity, Text, StyleSheet, Modal } from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
+import { useDispatch, useSelector } from "react-redux";
+import { setLanguage } from "../store/languageSlice";
+import { useTranslate } from "../localization/useTranslate";
 
+export default function LanguageModal({ isVisible, onClose }) {
+   const t = useTranslate();
+   const dispatch = useDispatch();
 
-
-export default function LanguageModal({ isVisible, onClose, onSelectLanguage }) {
-   const languages = [
-      { id: "en", label: "English", flag: "🇬🇧" },
-      { id: "zh-cn", label: "简体中文 (Simplified Chinese)", flag: "🇨🇳" },
-      { id: "zh-tw", label: "繁體中文 (Traditional Chinese)", flag: "🇹🇼" },
-      { id: "mn", label: "粤語 (Cantonese)", flag: "🇭🇰" },
-   ]
+   // 🔥 Single source of truth
+   const currentLocale = useSelector((state) => state.language.locale);
 
    const handleLanguageSelect = (languageId) => {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-      onSelectLanguage(languageId)
-      onClose()
-   }
+      if (languageId === currentLocale) {
+         onClose();
+         return;
+      }
+
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      dispatch(setLanguage(languageId));
+      onClose();
+   };
+
+   const languages = [
+      { id: "en", label: "English", flag: "🇬🇧" },
+      { id: "zh-Hans", label: "简体中文", flag: "🇨🇳" },
+      { id: "zh-Hant", label: "繁體中文（香港）", flag: "🇭🇰" },
+   ];
 
    return (
-      <Modal transparent visible={isVisible} animationType="fade" onRequestClose={onClose}>
-         <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={onClose}>
+      <Modal
+         transparent
+         visible={isVisible}
+         animationType="fade"
+         onRequestClose={onClose}
+      >
+         <TouchableOpacity
+            style={styles.overlay}
+            activeOpacity={1}
+            onPress={onClose}
+         >
             <View style={styles.modalContainer}>
                <View style={styles.modalContent}>
+                  {/* Header */}
                   <View style={styles.modalHeader}>
-                     <Text style={styles.modalTitle}>Select Language</Text>
+                     <Text style={styles.modalTitle}>
+                        {t("common.select_language")}
+                     </Text>
                      <TouchableOpacity onPress={onClose} activeOpacity={0.7}>
-                        <MaterialCommunityIcons name="close" size={24} color="#FF6D00" />
+                        <MaterialCommunityIcons
+                           name="close"
+                           size={24}
+                           color="#FF6D00"
+                        />
                      </TouchableOpacity>
                   </View>
 
+                  {/* Language list */}
                   <View style={styles.languageList}>
-                     {languages.map((lang) => (
-                        <TouchableOpacity
-                           key={lang.id}
-                           style={styles.languageItem}
-                           onPress={() => handleLanguageSelect(lang.id)}
-                           activeOpacity={0.7}
-                        >
-                           <Text style={styles.flag}>{lang.flag}</Text>
-                           <Text style={styles.languageLabel}>{lang.label}</Text>
-                           <MaterialCommunityIcons name="chevron-right" size={20} color="#FF6D00" />
-                        </TouchableOpacity>
-                     ))}
+                     {languages.map((lang) => {
+                        const isSelected = lang.id === currentLocale;
+
+                        return (
+                           <TouchableOpacity
+                              key={lang.id}
+                              style={[
+                                 styles.languageItem,
+                                 isSelected && styles.languageItemSelected,
+                              ]}
+                              onPress={() => handleLanguageSelect(lang.id)}
+                              activeOpacity={0.7}
+                           >
+                              <Text style={styles.flag}>{lang.flag}</Text>
+
+                              <Text style={styles.languageLabel}>
+                                 {lang.label}
+                              </Text>
+
+                              {isSelected ? (
+                                 <MaterialCommunityIcons
+                                    name="check"
+                                    size={22}
+                                    color="#FF6D00"
+                                 />
+                              ) : (
+                                 <MaterialCommunityIcons
+                                    name="chevron-right"
+                                    size={20}
+                                    color="#FF6D00"
+                                 />
+                              )}
+                           </TouchableOpacity>
+                        );
+                     })}
                   </View>
                </View>
             </View>
          </TouchableOpacity>
       </Modal>
-   )
+   );
 }
 
 const styles = StyleSheet.create({
    overlay: {
       flex: 1,
-      backgroundColor: "rgba(0, 0, 0, 0.5)",
+      backgroundColor: "rgba(0,0,0,0.5)",
       justifyContent: "flex-end",
    },
    modalContainer: {
@@ -92,6 +143,9 @@ const styles = StyleSheet.create({
       borderBottomWidth: 1,
       borderBottomColor: "#333",
    },
+   languageItemSelected: {
+      backgroundColor: "rgba(255,109,0,0.12)",
+   },
    flag: {
       fontSize: 24,
       marginRight: 12,
@@ -102,4 +156,4 @@ const styles = StyleSheet.create({
       fontWeight: "500",
       color: "#fff",
    },
-})
+});

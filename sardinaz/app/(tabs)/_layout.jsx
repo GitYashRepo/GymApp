@@ -1,53 +1,76 @@
-import { Tabs, useRouter } from "expo-router"
-import { useState } from "react"
-import { View, TouchableOpacity, Text, StyleSheet } from "react-native"
-import * as Haptics from "expo-haptics"
-import { MaterialCommunityIcons } from "@expo/vector-icons"
-import TopNavBar from "../../components/TopNavBar"
-import SideNavBar from "../../components/SideNavBar"
-import LanguageModal from "../../components/LanguageModal"
+import { Tabs, useRouter } from "expo-router";
+import { useState } from "react";
+import { useSelector } from "react-redux";
+import { useTranslate } from "../../localization/useTranslate";
+import { View, TouchableOpacity, Text, StyleSheet } from "react-native";
+import * as Haptics from "expo-haptics";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+
+import TopNavBar from "../../components/TopNavBar";
+import SideNavBar from "../../components/SideNavBar";
+import LanguageModal from "../../components/LanguageModal";
 
 export default function TabLayout() {
-   const [activeTab, setActiveTab] = useState("home")
-   const [sidebarOpen, setSidebarOpen] = useState(false)
-   const [languageModalOpen, setLanguageModalOpen] = useState(false)
-   const [selectedLanguage, setSelectedLanguage] = useState("en")
-   const router = useRouter()
+   const [activeTab, setActiveTab] = useState("home");
+   const [sidebarOpen, setSidebarOpen] = useState(false);
+   const [languageModalOpen, setLanguageModalOpen] = useState(false);
+
+   const router = useRouter();
+
+   // 🔥 Force re-render on language change
+   const locale = useSelector((state) => state.language.locale);
+
+   // 🔥 Reactive translator
+   const t = useTranslate();
 
    const handleTabPress = (tabName) => {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-      setActiveTab(tabName)
-      router.push(tabName)
-   }
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      setActiveTab(tabName);
+      router.push(tabName);
+   };
 
    const handleMenuPress = () => {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-      setSidebarOpen(!sidebarOpen)
-   }
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      setSidebarOpen(!sidebarOpen);
+   };
 
    const handleFilterPress = () => {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-      setLanguageModalOpen(true)
-   }
-
-   const handleLanguageSelect = (language) => {
-      setSelectedLanguage(language)
-      console.log("[v0] Language selected:", language)
-   }
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      setLanguageModalOpen(true);
+   };
 
    const NavButton = ({ name, label, iconName }) => {
-      const isActive = activeTab === name
+      const isActive = activeTab === name;
+
       return (
-         <TouchableOpacity style={styles.navItem} onPress={() => handleTabPress(name)} activeOpacity={0.7}>
-            <MaterialCommunityIcons name={iconName} size={24} color={isActive ? "#FF6D00" : "#999"} />
-            <Text style={[styles.navLabel, isActive && styles.navLabelActive]}>{label}</Text>
+         <TouchableOpacity
+            style={styles.navItem}
+            onPress={() => handleTabPress(name)}
+            activeOpacity={0.7}
+         >
+            <MaterialCommunityIcons
+               name={iconName}
+               size={24}
+               color={isActive ? "#FF6D00" : "#999"}
+            />
+            <Text
+               style={[
+                  styles.navLabel,
+                  isActive && styles.navLabelActive,
+               ]}
+            >
+               {label}
+            </Text>
          </TouchableOpacity>
-      )
-   }
+      );
+   };
 
    return (
       <View style={styles.container}>
-         <TopNavBar onMenuPress={handleMenuPress} onFilterPress={handleFilterPress} />
+         <TopNavBar
+            onMenuPress={handleMenuPress}
+            onFilterPress={handleFilterPress}
+         />
 
          <View style={styles.contentContainer}>
             <Tabs
@@ -58,54 +81,58 @@ export default function TabLayout() {
             >
                <Tabs.Screen
                   name="home"
-                  options={{
-                     title: "Home",
-                  }}
+                  options={{ title: t("nav.home") }}
                />
-               {/* <Tabs.Screen
-                  name="pods"
-                  options={{
-                     title: "Pods",
-                  }}
-               /> */}
                <Tabs.Screen
                   name="classes"
-                  options={{
-                     title: "Classes",
-                  }}
+                  options={{ title: t("nav.classes") }}
                />
                <Tabs.Screen
                   name="content"
-                  options={{
-                     title: "Content",
-                  }}
+                  options={{ title: t("nav.content") }}
                />
                <Tabs.Screen
                   name="profile"
-                  options={{
-                     title: "Profile",
-                  }}
+                  options={{ title: t("nav.profile") }}
                />
             </Tabs>
          </View>
 
-         {/* Custom Bottom Navigation */}
+         {/* 🔥 Custom Bottom Navigation */}
          <View style={styles.bottomNav}>
-            <NavButton name="home" label="Home" iconName="home" />
-            {/* <NavButton name="pods" label="Pods" iconName="grid" /> */}
-            <NavButton name="classes" label="Classes" iconName="dumbbell" />
-            <NavButton name="content" label="Content" iconName="play-circle" />
-            <NavButton name="profile" label="Profile" iconName="account" />
+            <NavButton
+               name="home"
+               label={t("nav.home")}
+               iconName="home"
+            />
+            <NavButton
+               name="classes"
+               label={t("nav.classes")}
+               iconName="dumbbell"
+            />
+            <NavButton
+               name="content"
+               label={t("nav.content")}
+               iconName="play-circle"
+            />
+            <NavButton
+               name="profile"
+               label={t("nav.profile")}
+               iconName="account"
+            />
          </View>
 
-         <SideNavBar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+         <SideNavBar
+            isOpen={sidebarOpen}
+            onClose={() => setSidebarOpen(false)}
+         />
+
          <LanguageModal
             isVisible={languageModalOpen}
             onClose={() => setLanguageModalOpen(false)}
-            onSelectLanguage={handleLanguageSelect}
          />
       </View>
-   )
+   );
 }
 
 const styles = StyleSheet.create({
@@ -143,4 +170,4 @@ const styles = StyleSheet.create({
    navLabelActive: {
       color: "#FF6D00",
    },
-})
+});

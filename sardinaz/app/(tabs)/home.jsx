@@ -2,7 +2,7 @@ import { useState } from "react"
 import { View, Text, FlatList, StyleSheet, TextInput, TouchableOpacity, Image, SafeAreaView } from "react-native"
 import { Heart, Info } from "lucide-react-native"
 import { useRouter } from "expo-router"
-
+import { useTranslate } from "../../localization/useTranslate";
 
 
 const DUMMY_PODS = [
@@ -49,15 +49,16 @@ const DUMMY_PODS = [
 ]
 
 const PodCard = ({ pod, isFavorite, onToggleFavorite, onBookPress }) => {
+   const t = useTranslate();
    return (
       <View style={styles.card}>
          {/* Pod Image */}
          <Image source={{ uri: pod.image }} style={styles.podImage} />
 
          {/* Info Button */}
-         <TouchableOpacity style={styles.infoButton}>
-            <Info size={20} color="#000" />
-         </TouchableOpacity>
+         {/* <TouchableOpacity style={styles.infoButton}>
+            <Info size={20} color="#FF6D00" />
+         </TouchableOpacity> */}
 
          {/* Capacity Bar */}
          <View style={styles.capacityBar}>
@@ -84,7 +85,7 @@ const PodCard = ({ pod, isFavorite, onToggleFavorite, onBookPress }) => {
             <Text style={styles.disclaimer}>Check out our business profiles on Google and social media</Text>
 
             <TouchableOpacity style={styles.bookButton} onPress={onBookPress}>
-               <Text style={styles.bookButtonText}>BOOK NOW</Text>
+               <Text style={styles.bookButtonText}>{t("common.book_now")}</Text>
             </TouchableOpacity>
          </View>
       </View>
@@ -92,6 +93,7 @@ const PodCard = ({ pod, isFavorite, onToggleFavorite, onBookPress }) => {
 }
 
 export default function HomeScreen() {
+   const t = useTranslate();
    const router = useRouter()
    const [searchQuery, setSearchQuery] = useState("")
    const [favorites, setFavorites] = useState(new Set())
@@ -114,30 +116,6 @@ export default function HomeScreen() {
 
    return (
       <SafeAreaView style={styles.container}>
-         {/* Header */}
-         {/* <View style={styles.header}>
-            <View style={styles.headerTop}>
-               <TouchableOpacity>
-                  <Text style={styles.menuIcon}>☰</Text>
-               </TouchableOpacity>
-               <Text style={styles.headerTitle}>The Gym Pod</Text>
-               <TouchableOpacity>
-                  <Text style={styles.filterIcon}>⋮</Text>
-               </TouchableOpacity>
-            </View>
-
-            <View style={styles.searchContainer}>
-               <Text style={styles.searchIcon}>🔍</Text>
-               <TextInput
-                  style={styles.searchInput}
-                  placeholder="Search Pod here..."
-                  placeholderTextColor="#999"
-                  value={searchQuery}
-                  onChangeText={setSearchQuery}
-               />
-            </View>
-         </View> */}
-
          {/* Search Bar */}
          <View style={styles.searchBarContainer}>
             <Text style={styles.searchIcon}>🔍</Text>
@@ -209,19 +187,19 @@ const styles = StyleSheet.create({
       height: 200,
       backgroundColor: "#404040",
    },
-   infoButton: {
-      position: "absolute",
-      top: 12,
-      right: 12,
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      backgroundColor: "#333",
-      borderWidth: 2,
-      borderColor: "#FF6D00",
-      justifyContent: "center",
-      alignItems: "center",
-   },
+   // infoButton: {
+   //    position: "absolute",
+   //    top: 12,
+   //    right: 12,
+   //    width: 40,
+   //    height: 40,
+   //    borderRadius: 20,
+   //    backgroundColor: "#fff",
+   //    borderWidth: 2,
+   //    borderColor: "#FF6D00",
+   //    justifyContent: "center",
+   //    alignItems: "center",
+   // },
    capacityBar: {
       backgroundColor: "#FF6D00",
       flexDirection: "row",

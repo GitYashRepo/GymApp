@@ -1,29 +1,37 @@
-"use client"
+"use client";
 
-import { View, TouchableOpacity, Text, StyleSheet, ScrollView } from "react-native"
-import { MaterialCommunityIcons } from "@expo/vector-icons"
-import * as Haptics from "expo-haptics"
-import { useRouter } from "expo-router"
+import { View, TouchableOpacity, Text, StyleSheet, ScrollView } from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
+import { useRouter } from "expo-router";
+import { useSelector } from "react-redux";
+import { useTranslate } from "../localization/useTranslate";
 
 export default function SideNavBar({ isOpen, onClose }) {
-   const router = useRouter()
+   const router = useRouter();
+
+   // 🔥 Subscribe to language changes
+   const locale = useSelector((state) => state.language.locale);
+
+   // 🔥 Reactive translator
+   const t = useTranslate();
 
    const menuItems = [
-      { label: "Home", icon: "home", route: "/" },
-      { label: "My Bookings", icon: "calendar-check", route: "/bookings" },
-      { label: "Favorites", icon: "heart", route: "/favorites" },
-      { label: "Settings", icon: "cog", route: "/settings" },
-      { label: "Help & Support", icon: "help-circle", route: "/help" },
-      { label: "About", icon: "information", route: "/about" },
-   ]
+      { key: "home", icon: "home", route: "/" },
+      { key: "bookings", icon: "calendar-check", route: "/bookings" },
+      { key: "favorites", icon: "heart", route: "/favorites" },
+      { key: "settings", icon: "cog", route: "/settings" },
+      { key: "help", icon: "help-circle", route: "/help" },
+      { key: "about", icon: "information", route: "/about" },
+   ];
 
    const handleMenuItemPress = (route) => {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-      onClose()
-      router.push(route)
-   }
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      onClose();
+      router.push(route);
+   };
 
-   if (!isOpen) return null
+   if (!isOpen) return null;
 
    return (
       <>
@@ -32,33 +40,50 @@ export default function SideNavBar({ isOpen, onClose }) {
 
          {/* Sidebar */}
          <View style={styles.sidebar}>
+            {/* Header */}
             <View style={styles.header}>
-               <Text style={styles.headerTitle}>The Gym Pod</Text>
+               <Text style={styles.headerTitle}>
+                  {t("common.app_name")}
+               </Text>
                <TouchableOpacity onPress={onClose} activeOpacity={0.7}>
-                  <MaterialCommunityIcons name="close" size={28} color="#FF6D00" />
+                  <MaterialCommunityIcons
+                     name="close"
+                     size={28}
+                     color="#FF6D00"
+                  />
                </TouchableOpacity>
             </View>
 
+            {/* Menu */}
             <ScrollView style={styles.menuContainer}>
-               {menuItems.map((item, index) => (
+               {menuItems.map((item) => (
                   <TouchableOpacity
-                     key={index}
+                     key={item.key}
                      style={styles.menuItem}
                      onPress={() => handleMenuItemPress(item.route)}
                      activeOpacity={0.7}
                   >
-                     <MaterialCommunityIcons name={item.icon} size={24} color="#FF6D00" />
-                     <Text style={styles.menuLabel}>{item.label}</Text>
+                     <MaterialCommunityIcons
+                        name={item.icon}
+                        size={24}
+                        color="#FF6D00"
+                     />
+                     <Text style={styles.menuLabel}>
+                        {t(`side_nav.${item.key}`)}
+                     </Text>
                   </TouchableOpacity>
                ))}
             </ScrollView>
 
+            {/* Footer */}
             <View style={styles.footer}>
-               <Text style={styles.versionText}>Version 1.0.0</Text>
+               <Text style={styles.versionText}>
+                  {t("common.version")} 1.0.0
+               </Text>
             </View>
          </View>
       </>
-   )
+   );
 }
 
 const styles = StyleSheet.create({
@@ -123,4 +148,4 @@ const styles = StyleSheet.create({
       fontSize: 12,
       color: "#666",
    },
-})
+});

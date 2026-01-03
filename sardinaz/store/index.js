@@ -14,10 +14,12 @@ import AsyncStorage from "@react-native-async-storage/async-storage"
 import authReducer from "./authSlice"
 import podReducer from "./podSlice"
 import bookingReducer from "./bookingSlice"
+import languageReducer from "./languageSlice";
 
 const persistConfig = {
-  key: "auth",
+  key: "root",
   storage: AsyncStorage,
+  whitelist: ["language"],
 }
 
 const persistedAuth = persistReducer(persistConfig, authReducer)
@@ -27,6 +29,7 @@ export const store = configureStore({
     auth: persistedAuth,
     pods: podReducer,
     booking: bookingReducer,
+    language: languageReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

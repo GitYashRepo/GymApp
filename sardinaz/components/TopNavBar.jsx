@@ -1,8 +1,12 @@
 import { View, TouchableOpacity, Text, StyleSheet } from "react-native"
 import { MaterialCommunityIcons } from "@expo/vector-icons"
+import { useSelector } from "react-redux";
 import * as Haptics from "expo-haptics"
+import { useTranslate } from "../localization/useTranslate";
 
 export default function TopNavBar({ onMenuPress, onFilterPress }) {
+   const t = useTranslate();
+   const locale = useSelector((state) => state.language.locale);
    const handleMenuPress = () => {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
       onMenuPress?.()
@@ -18,7 +22,7 @@ export default function TopNavBar({ onMenuPress, onFilterPress }) {
          <TouchableOpacity onPress={handleMenuPress} activeOpacity={0.7}>
             <MaterialCommunityIcons name="menu" size={28} color="#000" />
          </TouchableOpacity>
-         <Text style={styles.title}>SARDINAZ GYM</Text>
+         <Text style={styles.title}>{t("common.app_name")}</Text>
          <TouchableOpacity onPress={handleFilterPress} activeOpacity={0.7}>
             <MaterialCommunityIcons name="tune" size={28} color="#000" />
          </TouchableOpacity>
