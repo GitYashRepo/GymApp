@@ -11,6 +11,8 @@ import SideNavBar from "../../components/SideNavBar";
 import LanguageModal from "../../components/LanguageModal";
 
 export default function TabLayout() {
+   const { user } = useSelector((state) => state.auth)
+   const isLoggedIn = !!user
    const [activeTab, setActiveTab] = useState("home");
    const [sidebarOpen, setSidebarOpen] = useState(false);
    const [languageModalOpen, setLanguageModalOpen] = useState(false);
@@ -92,8 +94,10 @@ export default function TabLayout() {
                   options={{ title: t("nav.content") }}
                />
                <Tabs.Screen
-                  name="profile"
-                  options={{ title: t("nav.profile") }}
+                  name={isLoggedIn ? "profile" : "auth"}
+                  options={{
+                     title: isLoggedIn ? t("nav.profile") : t("nav.login"),
+                  }}
                />
             </Tabs>
          </View>
@@ -116,9 +120,9 @@ export default function TabLayout() {
                iconName="play-circle"
             />
             <NavButton
-               name="profile"
-               label={t("nav.profile")}
-               iconName="account"
+               name={isLoggedIn ? "profile" : "auth"}
+               label={isLoggedIn ? t("nav.profile") : t("nav.login")}
+               iconName={isLoggedIn ? "account" : "login"}
             />
          </View>
 

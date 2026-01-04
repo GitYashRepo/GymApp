@@ -24,6 +24,8 @@ export default {
       classes: "Classes",
       content: "Content",
       profile: "Profile",
+      login: "Login",
+      register: "Register"
     },
     side_nav: {
       home: "Home",
@@ -60,6 +62,8 @@ export default {
     classes: "课程",
     content: "内容",
     profile: "我的",
+    login: "登录",
+    register: "注册",
   },
   side_nav: {
   home: "首页",
@@ -95,6 +99,8 @@ export default {
     classes: "課程",
     content: "內容",
     profile: "我的",
+    login: "登入",
+    register: "註冊",
   },
   side_nav: {
   home: "主頁",
