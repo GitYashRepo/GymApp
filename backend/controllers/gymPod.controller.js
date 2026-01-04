@@ -1,4 +1,6 @@
 const GymPod = require("../models/GymPod");
+const Booking = require("../models/Booking");
+
 
 /**
  * ADMIN: Create Gym Pod
@@ -8,8 +10,6 @@ exports.createGymPod = async (req, res) => {
     const {
       name,
       locationName,
-      latitude,
-      longitude,
       pricePer30Min,
       description,
       images
@@ -18,8 +18,6 @@ exports.createGymPod = async (req, res) => {
     const pod = await GymPod.create({
       name,
       locationName,
-      latitude,
-      longitude,
       pricePer30Min,
       description,
       images,
@@ -42,50 +40,24 @@ exports.createGymPod = async (req, res) => {
  */
 exports.getHomePods = async (req, res) => {
   try {
-    const now = new Date();
-
-    // 1️⃣ Get all active pods
     const pods = await GymPod.find({ isActive: true })
       .sort({ createdAt: -1 })
-      .select("name locationName pricePer30Min images latitude longitude");
-
-    const podIds = pods.map(p => p._id);
-
-    // 2️⃣ Find pods that are currently booked
-    const activeBookings = await Booking.find({
-      gymPod: { $in: podIds },
-      startTime: { $lte: now },
-      endTime: { $gt: now },
-      status: "booked"
-    }).select("gymPod");
-
-    const bookedPodIds = new Set(
-      activeBookings.map(b => b.gymPod.toString())
-    );
-
-    // 3️⃣ Attach status to each pod
-    const response = pods.map(pod => ({
-      _id: pod._id,
-      name: pod.name,
-      locationName: pod.locationName,
-      pricePer30Min: pod.pricePer30Min,
-      images: pod.images,
-      latitude: pod.latitude,
-      longitude: pod.longitude,
-      status: bookedPodIds.has(pod._id.toString())
-        ? "BOOKED"
-        : "BOOK_NOW"
-    }));
+      .select("name locationName pricePer30Min description maxCapacity");
 
     res.status(200).json({
       success: true,
-      data: response
+      data: pods,
     });
-
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    console.error("GET HOME PODS ERROR:", err);
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
   }
 };
+
+
 
 /**
  * USER: Pod Details Screen

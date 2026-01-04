@@ -1,3 +1,5 @@
+const mongoose = require("mongoose");
+
 const bookingSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
@@ -67,3 +69,6 @@ const bookingSchema = new mongoose.Schema({
   verifiedAt: Date
 
 }, { timestamps: true });
+
+
+exports.Booking = mongoose.model("Booking", bookingSchema);
