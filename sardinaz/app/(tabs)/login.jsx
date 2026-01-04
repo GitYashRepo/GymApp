@@ -21,7 +21,7 @@ export default function LoginScreen() {
       if (!user) return
 
       if (user.role === "admin") {
-         router.replace("/(admin)/dashboard")
+         router.replace("/(admin)/profile")
       } else {
          router.replace("/(tabs)/home")
       }

@@ -35,7 +35,7 @@ export default function CreatePod() {
    }
 
    return (
-      <ScrollView style={styles.container}>
+      <View style={styles.container}>
          <Text style={styles.title}>Create GymPod</Text>
 
          {["name", "locationName", "pricePer30Min", "description"].map((f) => (
@@ -59,7 +59,7 @@ export default function CreatePod() {
          <TouchableOpacity style={styles.button} onPress={handleCreate}>
             <Text style={styles.buttonText}>Create Pod</Text>
          </TouchableOpacity>
-      </ScrollView>
+      </View>
    )
 }
 
