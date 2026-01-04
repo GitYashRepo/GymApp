@@ -9,6 +9,17 @@ import { useTranslate } from "../localization/useTranslate";
 
 export default function SideNavBar({ isOpen, onClose }) {
    const router = useRouter();
+   const { user } = useSelector((state) => state.auth);
+
+   const isAdmin = user?.role === "admin";
+   const isLoggedIn = !!user;
+
+   const profileRoute = isAdmin
+      ? "/(admin)/profile"
+      : isLoggedIn
+         ? "profile"
+         : "auth";
+
 
    // 🔥 Subscribe to language changes
    const locale = useSelector((state) => state.language.locale);
@@ -17,12 +28,12 @@ export default function SideNavBar({ isOpen, onClose }) {
    const t = useTranslate();
 
    const menuItems = [
-      { key: "home", icon: "home", route: "/" },
+      { key: "home", icon: "home", route: "home" },
       { key: "bookings", icon: "calendar-check", route: "/bookings" },
-      { key: "favorites", icon: "heart", route: "/favorites" },
-      { key: "settings", icon: "cog", route: "/settings" },
+      // { key: "favorites", icon: "heart", route: "/favorites" },
+      // { key: "settings", icon: "cog", route: "/settings" },
       { key: "help", icon: "help-circle", route: "/help" },
-      { key: "about", icon: "information", route: "/about" },
+      { key: "profile", icon: "account", route: profileRoute },
    ];
 
    const handleMenuItemPress = (route) => {

@@ -12,6 +12,7 @@ import LanguageModal from "../../components/LanguageModal";
 
 export default function TabLayout() {
    const { user } = useSelector((state) => state.auth)
+   const isAdmin = user?.role === "admin"
    const isLoggedIn = !!user
    const [activeTab, setActiveTab] = useState("home");
    const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -22,11 +23,21 @@ export default function TabLayout() {
    // 🔥 Force re-render on language change
    const locale = useSelector((state) => state.language.locale);
 
+   const profileRoute = isAdmin
+      ? "/(admin)/profile"
+      : isLoggedIn
+         ? "profile"
+         : "auth"
+
    // 🔥 Reactive translator
    const t = useTranslate();
 
    const handleTabPress = (tabName) => {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      if (tabName === "profile" && isAdmin) {
+         router.push(profileRoute)
+         return
+      }
       setActiveTab(tabName);
       router.push(tabName);
    };
