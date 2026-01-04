@@ -1,5 +1,3 @@
-const mongoose = require("mongoose");
-
 const bookingSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
@@ -11,9 +9,33 @@ const bookingSchema = new mongoose.Schema({
     ref: "GymPod",
     required: true
   },
-  startTime: { type: Date, required: true },
-  endTime: { type: Date, required: true },
 
+  // SLOT INFO
+  slotDate: {
+    type: String, // YYYY-MM-DD
+    required: true,
+    index: true
+  },
+
+  startTime: {
+    type: Date,
+    required: true
+  },
+
+  endTime: {
+    type: Date,
+    required: true
+  },
+
+  // CAPACITY
+  personsCount: {
+    type: Number,
+    required: true,
+    min: 1,
+    max: 3
+  },
+
+  // PAYMENT FLOW
   status: {
     type: String,
     enum: [
@@ -37,6 +59,7 @@ const bookingSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+
   verifiedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Admin"
@@ -44,5 +67,3 @@ const bookingSchema = new mongoose.Schema({
   verifiedAt: Date
 
 }, { timestamps: true });
-
-module.exports = mongoose.model("Booking", bookingSchema);

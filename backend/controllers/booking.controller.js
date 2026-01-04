@@ -1,5 +1,6 @@
 const Booking = require("../models/Booking");
 const GymPod = require("../models/GymPod");
+const { generateSlots } = require("../utils/slotGenerator");
 
 /**
  * 1️⃣ CREATE BOOKING (30 min)
@@ -59,22 +60,34 @@ exports.getPodAvailability = async (req, res) => {
     const { podId } = req.params;
     const { date } = req.query;
 
-    const dayStart = new Date(`${date}T00:00:00`);
-    const dayEnd = new Date(`${date}T23:59:59`);
+    const slots = generateSlots(date);
 
     const bookings = await Booking.find({
-      gymPod: podId,
-      startTime: { $gte: dayStart, $lte: dayEnd },
-      status: "pending_payment"
-    });
+    gymPod: podId,
+    slotDate: date,
+    status: { $in: ["pending_payment", "payment_uploaded", "confirmed"] }
+  });
 
-    res.status(200).json({
-      success: true,
-      bookedSlots: bookings.map(b => ({
-        startTime: b.startTime,
-        endTime: b.endTime
-      }))
-    });
+  const slotMap = {};
+  bookings.forEach(b => {
+    const key = b.startTime.toISOString();
+    slotMap[key] = (slotMap[key] || 0) + b.personsCount;
+  });
+
+    const response = slots.map(slot => {
+    const key = slot.startTime.toISOString();
+    const booked = slotMap[key] || 0;
+
+    return {
+      startTime: slot.startTime,
+      endTime: slot.endTime,
+      bookedPersons: booked,
+      maxCapacity: 3,
+      isFull: booked >= 3
+    };
+  });
+
+  res.json({ success: true, data: response });
 
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

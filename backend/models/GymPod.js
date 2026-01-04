@@ -9,7 +9,8 @@ const gymPodSchema = new mongoose.Schema({
   description: {type: String},
   images: [String],
   isActive: {type: Boolean, default: true},
-  createdBy: {type: mongoose.Schema.Types.ObjectId, ref: "Admin"}
+  createdBy: {type: mongoose.Schema.Types.ObjectId, ref: "Admin"},
+  maxCapacity: {type: Number, default: 3 }
 }, { timestamps: true });
 
 module.exports = mongoose.model("GymPod", gymPodSchema);
