@@ -14,22 +14,32 @@ exports.register = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = await User.create({
+    await User.create({
       firstname,
       lastname,
       email,
       phone,
-      password: hashedPassword
+      password: hashedPassword,
     });
 
     return res.status(201).json({
-      message: "User registered successfully"
+      message: "User registered successfully",
     });
-
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    // 🔥 HANDLE DUPLICATE KEY ERROR
+    if (err.code === 11000) {
+      return res.status(400).json({
+        message: "Email already registered",
+      });
+    }
+
+    console.error("Register error:", err);
+    return res.status(500).json({
+      message: "Internal server error",
+    });
   }
 };
+
 
 // LOGIN
 exports.login = async (req, res) => {

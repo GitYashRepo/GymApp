@@ -17,7 +17,7 @@ router.post("/", protect, createBooking);
 
 // Upload payment screenshot
 router.patch(
-  "/:id/upload-payment",
+  "/:id/verify-payment",
   protect,
   upload.single("payment"),
   uploadPaymentProof
