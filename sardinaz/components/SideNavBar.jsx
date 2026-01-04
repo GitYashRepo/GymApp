@@ -29,9 +29,7 @@ export default function SideNavBar({ isOpen, onClose }) {
 
    const menuItems = [
       { key: "home", icon: "home", route: "home" },
-      { key: "bookings", icon: "calendar-check", route: "/bookings" },
-      // { key: "favorites", icon: "heart", route: "/favorites" },
-      // { key: "settings", icon: "cog", route: "/settings" },
+      { key: "bookings", icon: "calendar-check", route: "/booking" },
       { key: "help", icon: "help-circle", route: "/help" },
       { key: "profile", icon: "account", route: profileRoute },
    ];
