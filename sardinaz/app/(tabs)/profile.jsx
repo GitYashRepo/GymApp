@@ -1,77 +1,247 @@
-import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, Image } from "react-native"
+import {
+   View,
+   Text,
+   StyleSheet,
+   ScrollView,
+   SafeAreaView,
+   TouchableOpacity,
+   Image,
+   ActivityIndicator,
+} from "react-native"
 import { MaterialCommunityIcons } from "@expo/vector-icons"
+import { useEffect, useState } from "react"
+import { useDispatch } from "react-redux"
+import { useRouter } from "expo-router"
+import { Modal } from "react-native"
+import * as ImagePicker from "expo-image-picker"
+import api from "../../services/api"
+import { logout } from "../../store/authSlice"
 
 export default function ProfileScreen() {
-   const userInfo = {
-      name: "John Doe",
-      email: "john@example.com",
-      phone: "+1 (555) 123-4567",
-      memberSince: "January 2024",
-      avatar: "https://via.placeholder.com/150?text=JD",
+   const dispatch = useDispatch()
+   const router = useRouter()
+
+   const [user, setUser] = useState(null)
+   const [loading, setLoading] = useState(true)
+   const [error, setError] = useState("")
+   const [modalVisible, setModalVisible] = useState(false)
+   const [uploading, setUploading] = useState(false)
+
+
+   useEffect(() => {
+      fetchProfile()
+   }, [])
+
+   const fetchProfile = async () => {
+      try {
+         const res = await api.get("/users/me")
+         setUser(res.data)
+      } catch (err) {
+         setError("Failed to load profile")
+      } finally {
+         setLoading(false)
+      }
    }
 
-   const stats = [
-      { icon: "dumbbell", label: "Classes Attended", value: "24" },
-      { icon: "heart", label: "Favorite Pods", value: "8" },
-      { icon: "calendar-check", label: "Bookings", value: "12" },
-   ]
+   const handleLogout = () => {
+      dispatch(logout())
+      router.replace("/(tabs)/login")
+   }
 
-   const menuOptions = [
-      { icon: "calendar", label: "My Bookings" },
-      { icon: "heart", label: "Favorites" },
-      { icon: "bell", label: "Notifications" },
-      { icon: "cog", label: "Settings" },
-      { icon: "lock", label: "Privacy & Security" },
-      { icon: "help-circle", label: "Help & Support" },
-   ]
+
+
+   if (loading) {
+      return (
+         <SafeAreaView style={styles.container}>
+            <ActivityIndicator size="large" color="#FF6D00" />
+         </SafeAreaView>
+      )
+   }
+
+   if (error || !user) {
+      return (
+         <SafeAreaView style={styles.container}>
+            <Text style={styles.errorText}>{error || "No user data"}</Text>
+         </SafeAreaView>
+      )
+   }
+
+   const date = new Date(user.createdAt)
+
+   const memberSince = `${date.getDate()} ${date.toLocaleString("en-GB", { month: "long" })
+      } ${date.getFullYear()}`
+
+
+   // const memberSince = new Date(user.createdAt).toLocaleDateString("en-US", {
+   //    day: "numeric",
+   //    month: "long",
+   //    year: "numeric",
+   // })
+
+   const pickImage = async () => {
+      setModalVisible(false)
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+         mediaTypes: ImagePicker.MediaTypeOptions.Images,
+         allowsEditing: true,
+         aspect: [1, 1],
+         quality: 0.7,
+      })
+
+      if (result.canceled) return
+
+      const image = result.assets[0]
+
+      const formData = new FormData()
+      formData.append("image", {
+         uri: image.uri,
+         name: "profile.jpg",
+         type: "image/jpeg",
+      })
+
+      try {
+         setUploading(true)
+
+         const res = await api.put("/users/profile-image", formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+         })
+
+         setUser({ ...user, profileImage: res.data.image })
+      } catch (err) {
+         alert("Image upload failed")
+      } finally {
+         setUploading(false)
+      }
+   }
+
 
    return (
-      <SafeAreaView style={styles.container}>
-         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-            {/* Profile Header */}
-            <View style={styles.profileHeader}>
-               <Image source={{ uri: userInfo.avatar }} style={styles.avatar} />
-               <Text style={styles.name}>{userInfo.name}</Text>
-               <Text style={styles.email}>{userInfo.email}</Text>
-               <Text style={styles.memberSince}>Member since {userInfo.memberSince}</Text>
-            </View>
-
-            {/* Stats */}
-            <View style={styles.statsContainer}>
-               {stats.map((stat, index) => (
-                  <View key={index} style={styles.statItem}>
-                     <MaterialCommunityIcons name={stat.icon} size={24} color="#FF6D00" />
-                     <Text style={styles.statValue}>{stat.value}</Text>
-                     <Text style={styles.statLabel}>{stat.label}</Text>
-                  </View>
-               ))}
-            </View>
-
-            {/* Menu Options */}
-            <View style={styles.menuSection}>
-               {menuOptions.map((option, index) => (
-                  <TouchableOpacity key={index} style={styles.menuOption} activeOpacity={0.7}>
-                     <MaterialCommunityIcons name={option.icon} size={20} color="#FF6D00" />
-                     <Text style={styles.menuLabel}>{option.label}</Text>
-                     <MaterialCommunityIcons name="chevron-right" size={20} color="#666" />
+      <>
+         <Modal
+            transparent
+            animationType="fade"
+            visible={modalVisible}
+            onRequestClose={() => setModalVisible(false)}
+         >
+            <View style={styles.modalBackdrop}>
+               <View style={styles.modalBox}>
+                  <TouchableOpacity style={styles.modalBtn} onPress={pickImage}>
+                     <Text style={styles.modalText}>Choose Image</Text>
                   </TouchableOpacity>
-               ))}
-            </View>
 
-            {/* Logout Button */}
-            <TouchableOpacity style={styles.logoutBtn} activeOpacity={0.7}>
-               <MaterialCommunityIcons name="logout" size={20} color="#fff" />
-               <Text style={styles.logoutBtnText}>LOGOUT</Text>
-            </TouchableOpacity>
-         </ScrollView>
-      </SafeAreaView>
+                  <TouchableOpacity
+                     style={[styles.modalBtn, styles.cancelBtn]}
+                     onPress={() => setModalVisible(false)}
+                  >
+                     <Text style={styles.modalText}>Cancel</Text>
+                  </TouchableOpacity>
+               </View>
+            </View>
+         </Modal>
+
+         <SafeAreaView style={styles.container}>
+            <ScrollView
+               contentContainerStyle={styles.content}
+               showsVerticalScrollIndicator={false}
+            >
+               {/* Profile Header */}
+               <View style={styles.profileHeader}>
+                  <View style={{ position: "relative" }}>
+                     <Image
+                        source={{
+                           uri: user.profileImage
+                              ? user.profileImage
+                              : `https://ui-avatars.com/api/?name=${user.firstname}+${user.lastname}&background=FF6D00&color=000`,
+                        }}
+                        style={styles.avatar}
+                     />
+
+                     {/* Edit Button */}
+                     <TouchableOpacity
+                        style={styles.editIcon}
+                        onPress={() => setModalVisible(true)}
+                     >
+                        <MaterialCommunityIcons name="camera" size={18} color="#000" />
+                     </TouchableOpacity>
+
+                     {uploading && (
+                        <View style={styles.uploadOverlay}>
+                           <ActivityIndicator color="#fff" />
+                        </View>
+                     )}
+                  </View>
+                  <Text style={styles.name}>
+                     {user.firstname} {user.lastname}
+                  </Text>
+                  <Text style={styles.email}>{user.email}</Text>
+                  <Text style={styles.memberSince}>
+                     Member since — {memberSince}
+                  </Text>
+               </View>
+
+               {/* Stats (placeholders for now) */}
+               <View style={styles.statsContainer}>
+                  <View style={styles.statItem}>
+                     <MaterialCommunityIcons name="calendar-check" size={24} color="#FF6D00" />
+                     <Text style={styles.statValue}>10</Text>
+                     <Text style={styles.statLabel}>Bookings</Text>
+                  </View>
+                  <View style={styles.statItem}>
+                     <MaterialCommunityIcons name="heart" size={24} color="#FF6D00" />
+                     <Text style={styles.statValue}>4</Text>
+                     <Text style={styles.statLabel}>Favorites</Text>
+                  </View>
+                  <View style={styles.statItem}>
+                     <MaterialCommunityIcons name="dumbbell" size={24} color="#FF6D00" />
+                     <Text style={styles.statValue}>27</Text>
+                     <Text style={styles.statLabel}>Sessions</Text>
+                  </View>
+               </View>
+
+               {/* Menu */}
+               <View style={styles.menuSection}>
+                  {[
+                     { icon: "calendar", label: "My Bookings" },
+                     { icon: "heart", label: "Favorites" },
+                     { icon: "bell", label: "Notifications" },
+                     { icon: "cog", label: "Settings" },
+                     { icon: "lock", label: "Privacy & Security" },
+                     { icon: "help-circle", label: "Help & Support" },
+                  ].map((item, index) => (
+                     <TouchableOpacity key={index} style={styles.menuOption}>
+                        <MaterialCommunityIcons
+                           name={item.icon}
+                           size={20}
+                           color="#FF6D00"
+                        />
+                        <Text style={styles.menuLabel}>{item.label}</Text>
+                        <MaterialCommunityIcons
+                           name="chevron-right"
+                           size={20}
+                           color="#666"
+                        />
+                     </TouchableOpacity>
+                  ))}
+               </View>
+
+               {/* Logout */}
+               <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+                  <MaterialCommunityIcons name="logout" size={20} color="#fff" />
+                  <Text style={styles.logoutBtnText}>LOGOUT</Text>
+               </TouchableOpacity>
+            </ScrollView>
+         </SafeAreaView>
+      </>
    )
 }
+
+/* ===================== STYLES ===================== */
 
 const styles = StyleSheet.create({
    container: {
       flex: 1,
       backgroundColor: "#1a1a1a",
+      justifyContent: "center",
    },
    content: {
       paddingHorizontal: 16,
@@ -99,7 +269,6 @@ const styles = StyleSheet.create({
    email: {
       fontSize: 14,
       color: "#999",
-      marginBottom: 2,
    },
    memberSince: {
       fontSize: 12,
@@ -160,5 +329,52 @@ const styles = StyleSheet.create({
       fontWeight: "700",
       marginLeft: 8,
       letterSpacing: 1,
+   },
+   errorText: {
+      color: "red",
+      textAlign: "center",
+      marginTop: 40,
+   },
+   editIcon: {
+      position: "absolute",
+      bottom: 0,
+      right: 0,
+      backgroundColor: "#FF6D00",
+      padding: 6,
+      borderRadius: 20,
+   },
+   uploadOverlay: {
+      position: "absolute",
+      width: 100,
+      height: 100,
+      borderRadius: 50,
+      backgroundColor: "rgba(0,0,0,0.5)",
+      justifyContent: "center",
+      alignItems: "center",
+   },
+   modalBackdrop: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.6)",
+      justifyContent: "center",
+      alignItems: "center",
+   },
+   modalBox: {
+      width: "80%",
+      backgroundColor: "#222",
+      borderRadius: 12,
+      padding: 20,
+   },
+   modalBtn: {
+      paddingVertical: 14,
+   },
+   cancelBtn: {
+      borderTopWidth: 1,
+      borderTopColor: "#333",
+      marginTop: 10,
+   },
+   modalText: {
+      color: "#FF6D00",
+      fontSize: 16,
+      textAlign: "center",
    },
 })
