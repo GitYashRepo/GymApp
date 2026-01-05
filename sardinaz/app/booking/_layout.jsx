@@ -1,7 +1,8 @@
 import { Stack, useRouter } from "expo-router"
 import { useSelector } from "react-redux"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { View, StyleSheet, TouchableOpacity, Text } from "react-native"
+import { useTranslate } from "../../localization/useTranslate"
 import { MaterialCommunityIcons } from "@expo/vector-icons"
 import * as Haptics from "expo-haptics"
 
@@ -9,40 +10,38 @@ import TopNavBar from "../../components/TopNavBar"
 import SideNavBar from "../../components/SideNavBar"
 import LanguageModal from "../../components/LanguageModal"
 
-export default function AdminLayout() {
+export default function BookingLayout() {
    const router = useRouter()
-   const [sidebarOpen, setSidebarOpen] = useState(false);
-   const [languageModalOpen, setLanguageModalOpen] = useState(false);
-   const { user } = useSelector(state => state.auth)
-   const [activeTab, setActiveTab] = useState("profile")
+   const { user } = useSelector((state) => state.auth)
+   const isLoggedIn = !!user
+
+   const [sidebarOpen, setSidebarOpen] = useState(false)
+   const [languageModalOpen, setLanguageModalOpen] = useState(false)
+   const [activeTab, setActiveTab] = useState("home")
+
+   const t = useTranslate()
+
+   /* ------------------ HANDLERS ------------------ */
 
    const handleMenuPress = () => {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      setSidebarOpen(!sidebarOpen);
-   };
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+      setSidebarOpen((prev) => !prev)
+   }
 
    const handleFilterPress = () => {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      setLanguageModalOpen(true);
-   };
-
-   // 🔐 Protect admin routes
-   useEffect(() => {
-      if (!user || user.role !== "admin") {
-         router.replace("/(tabs)/login")
-      }
-   }, [user])
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+      setLanguageModalOpen(true)
+   }
 
    const handleNav = (route) => {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-      if (route === "home") {
-         setActiveTab("home")
-         router.replace("/(tabs)/home")
-         return
-      }
       setActiveTab(route)
-      router.push(`/(admin)/${route}`)
+
+      // 🔥 ALL tabs live in /(tabs)/
+      router.replace(`/(tabs)/${route}`)
    }
+
+   /* ------------------ NAV ITEM ------------------ */
 
    const NavItem = ({ name, label, icon }) => (
       <TouchableOpacity
@@ -66,6 +65,8 @@ export default function AdminLayout() {
       </TouchableOpacity>
    )
 
+   /* ------------------ RENDER ------------------ */
+
    return (
       <View style={styles.container}>
          {/* 🔝 TOP NAV */}
@@ -74,7 +75,7 @@ export default function AdminLayout() {
             onFilterPress={handleFilterPress}
          />
 
-         {/* 🧭 ADMIN SCREENS */}
+         {/* 📦 CONTENT */}
          <View style={styles.content}>
             <Stack screenOptions={{ headerShown: false }}>
                <Stack.Screen
@@ -84,35 +85,37 @@ export default function AdminLayout() {
             </Stack>
          </View>
 
-         {/* 🔻 ADMIN BOTTOM NAV */}
+         {/* 🔻 BOTTOM NAV */}
          <View style={styles.bottomNav}>
             <NavItem
                name="home"
-               label="Home"
+               label={t("nav.home") ?? "Home"}
                icon="home"
             />
             <NavItem
-               name="create-pod"
-               label="Create Pod"
-               icon="plus-box"
+               name="classes"
+               label={t("nav.classes") ?? "Classes"}
+               icon="dumbbell"
             />
             <NavItem
-               name="dashboard"
-               label="Dashboard"
-               icon="view-dashboard"
+               name="content"
+               label={t("nav.content") ?? "Content"}
+               icon="play-circle"
             />
             <NavItem
-               name="profile"
-               label="Profile"
-               icon="account"
+               name={isLoggedIn ? "profile" : "login"}
+               label={isLoggedIn ? t("nav.profile") : t("nav.login")}
+               icon={isLoggedIn ? "account" : "login"}
             />
          </View>
 
+         {/* 🧭 SIDE NAV */}
          <SideNavBar
             isOpen={sidebarOpen}
             onClose={() => setSidebarOpen(false)}
          />
 
+         {/* 🌐 LANGUAGE MODAL */}
          <LanguageModal
             isVisible={languageModalOpen}
             onClose={() => setLanguageModalOpen(false)}
@@ -121,6 +124,7 @@ export default function AdminLayout() {
    )
 }
 
+/* ------------------ STYLES ------------------ */
 
 const styles = StyleSheet.create({
    container: {
@@ -158,4 +162,4 @@ const styles = StyleSheet.create({
    navLabelActive: {
       color: "#FF6D00",
    },
-});
+})

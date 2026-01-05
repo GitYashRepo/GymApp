@@ -48,7 +48,7 @@ const PodCard = ({ pod, isFavorite, onToggleFavorite, onBookPress }) => {
             </Text>
 
             <Text style={styles.priceText}>
-               Price: <Text style={styles.priceAmount}>${pod.pricePer30Min}</Text>
+               Price: <Text style={styles.priceAmount}>HK${pod.pricePer30Min}</Text>
                <Text style={styles.priceUnit}> /30 min</Text>
             </Text>
 

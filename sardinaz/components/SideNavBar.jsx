@@ -1,6 +1,12 @@
 "use client";
 
-import { View, TouchableOpacity, Text, StyleSheet, ScrollView } from "react-native";
+import {
+   View,
+   TouchableOpacity,
+   Text,
+   StyleSheet,
+   ScrollView,
+} from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
@@ -11,28 +17,52 @@ export default function SideNavBar({ isOpen, onClose }) {
    const router = useRouter();
    const { user } = useSelector((state) => state.auth);
 
-   const isAdmin = user?.role === "admin";
    const isLoggedIn = !!user;
+   const isAdmin = user?.role === "admin";
 
-   const profileRoute = isAdmin
-      ? "/(admin)/profile"
-      : isLoggedIn
-         ? "profile"
-         : "auth";
-
-
-   // 🔥 Subscribe to language changes
-   const locale = useSelector((state) => state.language.locale);
-
-   // 🔥 Reactive translator
    const t = useTranslate();
 
+   /* ------------------ MENU CONFIG ------------------ */
+
    const menuItems = [
-      { key: "home", icon: "home", route: "home" },
-      { key: "bookings", icon: "calendar-check", route: "/booking" },
-      { key: "help", icon: "help-circle", route: "/help" },
-      { key: "profile", icon: "account", route: profileRoute },
+      {
+         key: "home",
+         icon: "home",
+         label: t("side_nav.home"),
+         route: "/(tabs)/home",
+      },
+      {
+         key: "bookings",
+         icon: "calendar-check",
+         label: t("side_nav.bookings"),
+         route: "/mybookings",
+      },
+      {
+         key: "help",
+         icon: "help-circle",
+         label: t("side_nav.help"),
+         route: "/help",
+      },
    ];
+
+   // 🔐 AUTH DEPENDENT ITEM
+   if (isLoggedIn) {
+      menuItems.push({
+         key: "profile",
+         icon: "account",
+         label: t("side_nav.profile"),
+         route: isAdmin ? "/(admin)/profile" : "/(tabs)/profile",
+      });
+   } else {
+      menuItems.push({
+         key: "login",
+         icon: "login",
+         label: t("nav.login"), // 👈 comes from nav.login
+         route: "/login",
+      });
+   }
+
+   /* ------------------ HANDLERS ------------------ */
 
    const handleMenuItemPress = (route) => {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -45,7 +75,11 @@ export default function SideNavBar({ isOpen, onClose }) {
    return (
       <>
          {/* Overlay */}
-         <TouchableOpacity style={styles.overlay} onPress={onClose} />
+         <TouchableOpacity
+            style={styles.overlay}
+            onPress={onClose}
+            activeOpacity={1}
+         />
 
          {/* Sidebar */}
          <View style={styles.sidebar}>
@@ -78,7 +112,7 @@ export default function SideNavBar({ isOpen, onClose }) {
                         color="#FF6D00"
                      />
                      <Text style={styles.menuLabel}>
-                        {t(`side_nav.${item.key}`)}
+                        {item.label}
                      </Text>
                   </TouchableOpacity>
                ))}
@@ -94,6 +128,8 @@ export default function SideNavBar({ isOpen, onClose }) {
       </>
    );
 }
+
+/* ------------------ STYLES ------------------ */
 
 const styles = StyleSheet.create({
    overlay: {
