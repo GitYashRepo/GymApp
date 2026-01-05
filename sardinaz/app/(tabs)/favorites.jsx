@@ -16,10 +16,14 @@ import { useCallback } from "react";
 
 
 const POD_IMAGE = require("../../assets/images/pod-1.png");
+const PUPPY_IMAGE = {
+   uri: "https://icon-library.com/images/no-picture-available-icon/no-picture-available-icon-1.jpg"
+};
 
 export default function FavoritesScreen() {
    const [favorites, setFavorites] = useState([]);
    const [loading, setLoading] = useState(true);
+
 
    useFocusEffect(
       useCallback(() => {
@@ -75,36 +79,40 @@ export default function FavoritesScreen() {
             data={favorites}
             keyExtractor={(item) => item._id}
             contentContainerStyle={styles.list}
-            renderItem={({ item }) => (
-               <View style={styles.card}>
-                  <Image source={POD_IMAGE} style={styles.image} />
+            renderItem={({ item }) => {
+               const isSuiHong = item.locationName === "Sui Hong, Hong Kong";
+               const imageSource = isSuiHong ? POD_IMAGE : PUPPY_IMAGE;
+               return (
+                  <View style={styles.card}>
+                     <Image source={imageSource} style={styles.image} />
 
-                  <View style={styles.info}>
-                     <View style={styles.row}>
-                        <Text style={styles.name}>{item.name}</Text>
+                     <View style={styles.info}>
+                        <View style={styles.row}>
+                           <Text style={styles.name}>{item.name}</Text>
 
-                        <TouchableOpacity
-                           onPress={() => removeFavorite(item._id)}
-                        >
-                           <MaterialCommunityIcons
-                              name="heart-broken"
-                              size={22}
-                              color="#ff3b30"
-                           />
-                        </TouchableOpacity>
+                           <TouchableOpacity
+                              onPress={() => removeFavorite(item._id)}
+                           >
+                              <MaterialCommunityIcons
+                                 name="heart-broken"
+                                 size={22}
+                                 color="#ff3b30"
+                              />
+                           </TouchableOpacity>
+                        </View>
+
+                        <Text style={styles.location}>
+                           📍 {item.locationName}
+                        </Text>
+
+                        <Text style={styles.price}>
+                           HK$ {item.pricePer30Min}
+                           <Text style={styles.unit}> /30 min</Text>
+                        </Text>
                      </View>
-
-                     <Text style={styles.location}>
-                        📍 {item.locationName}
-                     </Text>
-
-                     <Text style={styles.price}>
-                        HK$ {item.pricePer30Min}
-                        <Text style={styles.unit}> /30 min</Text>
-                     </Text>
                   </View>
-               </View>
-            )}
+               )
+            }}
          />
       </SafeAreaView>
    );
@@ -114,6 +122,7 @@ const styles = StyleSheet.create({
    container: {
       flex: 1,
       backgroundColor: "#1a1a1a",
+      marginBottom: 80,
    },
    list: {
       padding: 16,
