@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
       marginBottom: 20,
    },
    section: {
-      marginBottom: 28,
+      marginBottom: 38,
    },
    sectionTitle: {
       fontSize: 18,
@@ -168,6 +168,6 @@ const styles = StyleSheet.create({
       color: "#666",
       fontSize: 12,
       marginTop: 10,
-      marginBottom: 30,
+      marginBottom: 160,
    },
 });

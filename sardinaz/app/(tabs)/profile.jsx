@@ -10,8 +10,11 @@ import {
 } from "react-native"
 import { MaterialCommunityIcons } from "@expo/vector-icons"
 import { useEffect, useState } from "react"
+import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux"
 import { useRouter } from "expo-router"
+import { useFocusEffect } from "expo-router";
+import { useCallback } from "react";
 import { Modal } from "react-native"
 import * as ImagePicker from "expo-image-picker"
 import api from "../../services/api"
@@ -26,11 +29,21 @@ export default function ProfileScreen() {
    const [error, setError] = useState("")
    const [modalVisible, setModalVisible] = useState(false)
    const [uploading, setUploading] = useState(false)
+   const [favoriteCount, setFavoriteCount] = useState(0);
+
+   const { token } = useSelector((state) => state.auth);
+
+   useFocusEffect(
+      useCallback(() => {
+         if (token) {
+            fetchProfile();
+            fetchFavoriteCount();
+         }
+      }, [token])
+   );
 
 
-   useEffect(() => {
-      fetchProfile()
-   }, [])
+
 
    const fetchProfile = async () => {
       try {
@@ -45,38 +58,8 @@ export default function ProfileScreen() {
 
    const handleLogout = () => {
       dispatch(logout())
-      router.replace("/(tabs)/login")
+      router.replace("/login")
    }
-
-
-
-   if (loading) {
-      return (
-         <SafeAreaView style={styles.container}>
-            <ActivityIndicator size="large" color="#FF6D00" />
-         </SafeAreaView>
-      )
-   }
-
-   if (error || !user) {
-      return (
-         <SafeAreaView style={styles.container}>
-            <Text style={styles.errorText}>{error || "No user data"}</Text>
-         </SafeAreaView>
-      )
-   }
-
-   const date = new Date(user.createdAt)
-
-   const memberSince = `${date.getDate()} ${date.toLocaleString("en-GB", { month: "long" })
-      } ${date.getFullYear()}`
-
-
-   // const memberSince = new Date(user.createdAt).toLocaleDateString("en-US", {
-   //    day: "numeric",
-   //    month: "long",
-   //    year: "numeric",
-   // })
 
    const pickImage = async () => {
       setModalVisible(false)
@@ -101,22 +84,76 @@ export default function ProfileScreen() {
 
       try {
          setUploading(true)
-
          const res = await api.put("/users/profile-image", formData, {
             headers: { "Content-Type": "multipart/form-data" },
          })
-
          setUser({ ...user, profileImage: res.data.image })
-      } catch (err) {
+      } catch {
          alert("Image upload failed")
       } finally {
          setUploading(false)
       }
    }
 
+   const fetchFavoriteCount = async () => {
+      try {
+         const res = await api.get("/users/favorites");
+         setFavoriteCount(res.data.data.length);
+      } catch (err) {
+         console.log("❌ Failed to fetch favorites count");
+      }
+   };
+
+
+   if (loading) {
+      return (
+         <SafeAreaView style={styles.container}>
+            <ActivityIndicator size="large" color="#FF6D00" />
+         </SafeAreaView>
+      )
+   }
+
+   if (error || !user) {
+      return (
+         <SafeAreaView style={styles.container}>
+            <Text style={styles.errorText}>{error || "No user data"}</Text>
+         </SafeAreaView>
+      )
+   }
+
+   const date = new Date(user.createdAt)
+   const memberSince = `${date.getDate()} ${date.toLocaleString("en-GB", {
+      month: "long",
+   })} ${date.getFullYear()}`
+
+   /* ------------------ MENU ROUTES ------------------ */
+
+   const menuItems = [
+      {
+         icon: "calendar",
+         label: "My Bookings",
+         route: "/mybookings",
+      },
+      {
+         icon: "heart",
+         label: "Favorites",
+         route: "/favorites",
+      },
+      {
+         icon: "lock",
+         label: "Privacy & Security",
+         route: "/privacy",
+      },
+      {
+         icon: "help-circle",
+         label: "Help & Support",
+         route: "/help",
+      },
+   ]
 
    return (
       <>
+         {/* IMAGE PICKER MODAL */}
          <Modal
             transparent
             animationType="fade"
@@ -128,7 +165,6 @@ export default function ProfileScreen() {
                   <TouchableOpacity style={styles.modalBtn} onPress={pickImage}>
                      <Text style={styles.modalText}>Choose Image</Text>
                   </TouchableOpacity>
-
                   <TouchableOpacity
                      style={[styles.modalBtn, styles.cancelBtn]}
                      onPress={() => setModalVisible(false)}
@@ -140,11 +176,8 @@ export default function ProfileScreen() {
          </Modal>
 
          <SafeAreaView style={styles.container}>
-            <ScrollView
-               contentContainerStyle={styles.content}
-               showsVerticalScrollIndicator={false}
-            >
-               {/* Profile Header */}
+            <ScrollView contentContainerStyle={styles.content}>
+               {/* PROFILE HEADER */}
                <View style={styles.profileHeader}>
                   <View style={{ position: "relative" }}>
                      <Image
@@ -155,8 +188,6 @@ export default function ProfileScreen() {
                         }}
                         style={styles.avatar}
                      />
-
-                     {/* Edit Button */}
                      <TouchableOpacity
                         style={styles.editIcon}
                         onPress={() => setModalVisible(true)}
@@ -170,6 +201,7 @@ export default function ProfileScreen() {
                         </View>
                      )}
                   </View>
+
                   <Text style={styles.name}>
                      {user.firstname} {user.lastname}
                   </Text>
@@ -179,7 +211,7 @@ export default function ProfileScreen() {
                   </Text>
                </View>
 
-               {/* Stats (placeholders for now) */}
+               {/* STATS */}
                <View style={styles.statsContainer}>
                   <View style={styles.statItem}>
                      <MaterialCommunityIcons name="calendar-check" size={24} color="#FF6D00" />
@@ -188,7 +220,7 @@ export default function ProfileScreen() {
                   </View>
                   <View style={styles.statItem}>
                      <MaterialCommunityIcons name="heart" size={24} color="#FF6D00" />
-                     <Text style={styles.statValue}>4</Text>
+                     <Text style={styles.statValue}>{favoriteCount}</Text>
                      <Text style={styles.statLabel}>Favorites</Text>
                   </View>
                   <View style={styles.statItem}>
@@ -198,17 +230,14 @@ export default function ProfileScreen() {
                   </View>
                </View>
 
-               {/* Menu */}
+               {/* MENU */}
                <View style={styles.menuSection}>
-                  {[
-                     { icon: "calendar", label: "My Bookings" },
-                     { icon: "heart", label: "Favorites" },
-                     { icon: "bell", label: "Notifications" },
-                     { icon: "cog", label: "Settings" },
-                     { icon: "lock", label: "Privacy & Security" },
-                     { icon: "help-circle", label: "Help & Support" },
-                  ].map((item, index) => (
-                     <TouchableOpacity key={index} style={styles.menuOption}>
+                  {menuItems.map((item, index) => (
+                     <TouchableOpacity
+                        key={index}
+                        style={styles.menuOption}
+                        onPress={() => router.push(item.route)}
+                     >
                         <MaterialCommunityIcons
                            name={item.icon}
                            size={20}
@@ -224,7 +253,7 @@ export default function ProfileScreen() {
                   ))}
                </View>
 
-               {/* Logout */}
+               {/* LOGOUT */}
                <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
                   <MaterialCommunityIcons name="logout" size={20} color="#fff" />
                   <Text style={styles.logoutBtnText}>LOGOUT</Text>
@@ -241,7 +270,6 @@ const styles = StyleSheet.create({
    container: {
       flex: 1,
       backgroundColor: "#1a1a1a",
-      justifyContent: "center",
    },
    content: {
       paddingHorizontal: 16,
@@ -264,7 +292,6 @@ const styles = StyleSheet.create({
       fontSize: 22,
       fontWeight: "700",
       color: "#FF6D00",
-      marginBottom: 4,
    },
    email: {
       fontSize: 14,
@@ -273,7 +300,6 @@ const styles = StyleSheet.create({
    memberSince: {
       fontSize: 12,
       color: "#666",
-      marginTop: 4,
    },
    statsContainer: {
       flexDirection: "row",
@@ -283,22 +309,14 @@ const styles = StyleSheet.create({
       paddingVertical: 16,
       marginBottom: 24,
    },
-   statItem: {
-      alignItems: "center",
-   },
+   statItem: { alignItems: "center" },
    statValue: {
       fontSize: 20,
       fontWeight: "700",
       color: "#FF6D00",
-      marginVertical: 4,
    },
-   statLabel: {
-      fontSize: 12,
-      color: "#999",
-   },
-   menuSection: {
-      marginBottom: 24,
-   },
+   statLabel: { fontSize: 12, color: "#999" },
+   menuSection: { marginBottom: 24 },
    menuOption: {
       flexDirection: "row",
       alignItems: "center",
@@ -322,13 +340,13 @@ const styles = StyleSheet.create({
       alignItems: "center",
       paddingVertical: 14,
       borderRadius: 10,
+      marginBottom: 40,
    },
    logoutBtnText: {
       color: "#fff",
       fontSize: 16,
       fontWeight: "700",
       marginLeft: 8,
-      letterSpacing: 1,
    },
    errorText: {
       color: "red",
@@ -364,9 +382,7 @@ const styles = StyleSheet.create({
       borderRadius: 12,
       padding: 20,
    },
-   modalBtn: {
-      paddingVertical: 14,
-   },
+   modalBtn: { paddingVertical: 14 },
    cancelBtn: {
       borderTopWidth: 1,
       borderTopColor: "#333",

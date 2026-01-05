@@ -100,7 +100,6 @@ export default function BookingScreen() {
          {/* HEADER */}
          <View style={styles.header}>
             <Text style={styles.headerTitle}>Changi City Point</Text>
-            <Info size={18} color="#000" />
          </View>
 
          {/* MONTH */}
@@ -173,7 +172,7 @@ const styles = StyleSheet.create({
    container: { flex: 1, backgroundColor: "#111" },
 
    header: {
-      backgroundColor: "#F4C400",
+      backgroundColor: "#FF6D00",
       padding: 16,
       flexDirection: "row",
       justifyContent: "space-between",
@@ -185,7 +184,7 @@ const styles = StyleSheet.create({
       paddingVertical: 8,
       backgroundColor: "#1c1c1c",
    },
-   monthText: { color: "#F4C400", fontWeight: "700" },
+   monthText: { color: "#FF6D00", fontWeight: "700" },
 
    gridWrapper: {
       flexDirection: "row",
@@ -222,11 +221,11 @@ const styles = StyleSheet.create({
       borderColor: "#1a1a1a",
    },
    slotSelected: {
-      backgroundColor: "#F4C400",
+      backgroundColor: "#FF6D00",
    },
 
    footer: {
-      backgroundColor: "#F4C400",
+      backgroundColor: "#FF6D00",
       padding: 14,
       marginBottom: 80,
       flexDirection: "row",
@@ -239,5 +238,5 @@ const styles = StyleSheet.create({
       paddingVertical: 8,
       borderRadius: 6,
    },
-   bookText: { color: "#F4C400", fontWeight: "700" },
+   bookText: { color: "#FF6D00", fontWeight: "700" },
 })

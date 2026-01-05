@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { useFocusEffect } from "expo-router";
+import { useCallback } from "react";
 import {
    View,
    Text,
@@ -15,6 +17,7 @@ import { useRouter } from "expo-router";
 import { useTranslate } from "../../localization/useTranslate";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchHomePods } from "../../store/podSlice";
+import api from "../../services/api";
 
 const POD_IMAGE = require("../../assets/images/pod-1.png");
 
@@ -65,15 +68,22 @@ const PodCard = ({ pod, isFavorite, onToggleFavorite, onBookPress }) => {
 export default function HomeScreen() {
    const router = useRouter();
    const dispatch = useDispatch();
-
    const { pods, loading } = useSelector((state) => state.pods);
-
+   const { token } = useSelector((state) => state.auth);
    const [searchQuery, setSearchQuery] = useState("");
    const [favorites, setFavorites] = useState(new Set());
+   const [updating, setUpdating] = useState(false);
 
    useEffect(() => {
       dispatch(fetchHomePods());
    }, []);
+
+   useFocusEffect(
+      useCallback(() => {
+         if (token) fetchFavorites();
+      }, [token])
+   );
+
 
    useEffect(() => {
       console.log("✅ REDUX PODS:", pods);
@@ -85,11 +95,44 @@ export default function HomeScreen() {
          .includes(searchQuery.toLowerCase())
    );
 
-   const toggleFavorite = (id) => {
-      const next = new Set(favorites);
-      next.has(id) ? next.delete(id) : next.add(id);
-      setFavorites(next);
+   const fetchFavorites = async () => {
+      try {
+         const res = await api.get("/users/favorites");
+         const ids = res.data.data.map((pod) => pod._id);
+         setFavorites(new Set(ids));
+      } catch (err) {
+         console.log("❌ Fetch favorites error", err);
+      }
    };
+
+
+   const toggleFavorite = async (podId) => {
+      if (updating) return;
+      setUpdating(true);
+
+      const isFav = favorites.has(podId);
+
+      try {
+         if (isFav) {
+            await api.delete(`/users/favorites/${podId}`);
+         } else {
+            await api.post(`/users/favorites/${podId}`);
+         }
+
+         setFavorites((prev) => {
+            const next = new Set(prev);
+            isFav ? next.delete(podId) : next.add(podId);
+            return next;
+         });
+      } catch (err) {
+         console.log("❌ Favorite error:", err.response?.data || err.message);
+      } finally {
+         setUpdating(false);
+      }
+   };
+
+
+
 
    return (
       <SafeAreaView style={styles.container}>

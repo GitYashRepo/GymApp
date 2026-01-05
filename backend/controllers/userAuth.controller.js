@@ -76,3 +76,71 @@ exports.profile = async (req, res) => {
   const user = await User.findById(req.user.id).select("-password");
   res.status(200).json(user);
 };
+
+
+// ADD POD TO FAVORITES
+exports.addFavoritePod = async (req, res) => {
+  try {
+    const { podId } = req.params;
+    const user = await User.findById(req.user.id);
+
+    const alreadyFavorite = user.favoritePods.some(
+      (id) => id.toString() === podId
+    );
+
+    if (!alreadyFavorite) {
+      user.favoritePods.push(podId);
+      await user.save();
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Pod added to favorites",
+      favoritePods: user.favoritePods,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+
+// REMOVE POD FROM FAVORITES
+exports.removeFavoritePod = async (req, res) => {
+  try {
+    const { podId } = req.params;
+    const user = await User.findById(req.user.id);
+
+    user.favoritePods = user.favoritePods.filter(
+      (id) => id.toString() !== podId
+    );
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Pod removed from favorites",
+      favoritePods: user.favoritePods,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+
+// GET FAVORITE PODS
+exports.getFavoritePods = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id)
+      .populate({
+        path: "favoritePods",
+        match: { isActive: true }, // optional
+      });
+
+    res.status(200).json({
+      success: true,
+      data: user.favoritePods,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
