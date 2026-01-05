@@ -21,12 +21,19 @@ import api from "../../services/api";
 
 const POD_IMAGE = require("../../assets/images/pod-1.png");
 
+const PUPPY_IMAGE = {
+   uri: "https://icon-library.com/images/no-picture-available-icon/no-picture-available-icon-1.jpg"
+};
+
 const PodCard = ({ pod, isFavorite, onToggleFavorite, onBookPress }) => {
    const t = useTranslate();
 
+   const showImage = pod.locationName === "Sui Hong, Hong Kong";
+   const imageSource = showImage ? POD_IMAGE : PUPPY_IMAGE;
+
    return (
       <View style={styles.card}>
-         <Image source={POD_IMAGE} style={styles.podImage} />
+         <Image source={imageSource} style={styles.podImage} />
 
          <View style={styles.capacityBar}>
             <Text style={styles.capacityText}>

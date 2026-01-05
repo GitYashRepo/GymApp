@@ -1,6 +1,21 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import api from "../services/api";
 
+export const createGymPod = createAsyncThunk(
+  "pods/createGymPod",
+  async (payload, thunkAPI) => {
+    try {
+      const res = await api.post("/pods/create-pods", payload);
+      return res.data.data;
+    } catch (err) {
+      return thunkAPI.rejectWithValue(
+        err.response?.data?.message || "Failed to create pod"
+      );
+    }
+  }
+);
+
+
 export const fetchHomePods = createAsyncThunk(
   "pods/fetchHome",
   async (_, thunkAPI) => {
