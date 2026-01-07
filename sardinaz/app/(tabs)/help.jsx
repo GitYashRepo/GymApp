@@ -7,7 +7,7 @@ import { useTranslate } from "../../localization/useTranslate";
 export default function HelpScreen() {
    const t = useTranslate();
    const openEmail = async () => {
-      const email = "webtechware25@gmail.com";
+      const email = "sardinazgym@gmail.com";
       const url = `mailto:${email}`;
 
       const canOpen = await Linking.canOpenURL(url);
@@ -19,8 +19,11 @@ export default function HelpScreen() {
       Linking.openURL(url);
    };
 
-   const openPhone = () => {
-      Linking.openURL("tel:+918003316534");
+   const openPhoneOne = () => {
+      Linking.openURL("tel:+85293605397");
+   };
+   const openPhoneTwo = () => {
+      Linking.openURL("tel:+85297935676");
    };
 
 
@@ -62,14 +65,20 @@ export default function HelpScreen() {
             <Item
                icon="email"
                title="Email Us"
-               description="webtechware25@gmail.com"
+               description="sardinazgym@gmail.com"
                onPress={openEmail}
             />
             <Item
                icon="phone"
                title="Call Support"
-               description="+918003316534"
-               onPress={openPhone}
+               description="+85293605397"
+               onPress={openPhoneOne}
+            />
+            <Item
+               icon="phone"
+               title="Call Support"
+               description="+85297935676"
+               onPress={openPhoneTwo}
             />
          </Section>
 

@@ -4,14 +4,21 @@ const {
   createGymPod,
   getHomePods,
   getPodDetails,
-  togglePodStatus
+  togglePodStatus,
+  updateGymPod,
+  getAdminPods,
+  deleteGymPod,
 } = require("../controllers/gymPod.controller");
 const { protect, adminOnly } = require("../middlewares/auth.middleware");
+const uploadGymPodImages = require("../middlewares/gymPodUpload.middleware");
 
 
 // ADMIN
-router.post("/create-pods", protect, adminOnly, createGymPod);
-router.patch("/:id/toggle", protect, adminOnly, togglePodStatus);
+router.post("/create-pods", protect, adminOnly, uploadGymPodImages.single("image"), createGymPod);
+router.patch("/:id/toggle", protect, adminOnly, togglePodStatus );
+router.get("/admin-pods", protect, adminOnly, getAdminPods );
+router.delete("/:id", protect, adminOnly, deleteGymPod );
+router.put("/:id", protect, adminOnly, uploadGymPodImages.single("image"), updateGymPod );
 
 // USER
 router.get("/get-pods", getHomePods);

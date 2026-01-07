@@ -25,7 +25,8 @@ export default {
       content: "Content",
       profile: "Profile",
       login: "Login",
-      register: "Register"
+      register: "Register",
+      helpsupport: "Help & Support",
     },
     side_nav: {
       home: "Home",
@@ -65,6 +66,7 @@ export default {
     profile: "我的",
     login: "登录",
     register: "注册",
+    helpsupport: "幫助與支援",
   },
   side_nav: {
   home: "首页",
@@ -103,6 +105,7 @@ export default {
     profile: "我的",
     login: "登入",
     register: "註冊",
+    helpsupport: "帮助与支持",
   },
   side_nav: {
   home: "主頁",
