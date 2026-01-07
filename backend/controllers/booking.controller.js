@@ -8,46 +8,68 @@ const { generateSlots } = require("../utils/slotGenerator");
  */
 exports.createBooking = async (req, res) => {
   try {
-    const { gymPodId, startTime } = req.body;
+    const { gymPodId, slotDate, startTime, personsCount } = req.body;
 
-    if (!gymPodId || !startTime) {
+    if (!gymPodId || !slotDate || !startTime || !personsCount) {
       return res.status(400).json({ message: "Missing booking data" });
+    }
+
+    const pod = await GymPod.findById(gymPodId);
+    if (!pod) {
+      return res.status(404).json({ message: "Pod not found" });
+    }
+
+    if (personsCount > pod.maxCapacity) {
+      return res.status(400).json({
+        message: `Maximum ${pod.maxCapacity} persons allowed`
+      });
     }
 
     const start = new Date(startTime);
     const end = new Date(start.getTime() + 30 * 60 * 1000);
 
-    // 🔴 Prevent overlapping bookings
-    const conflict = await Booking.findOne({
-      gymPod: gymPodId,
-      startTime: { $lt: end },
-      endTime: { $gt: start },
-      status: "booked"
-    });
+    // 🔢 Count already booked persons
+    const result = await Booking.aggregate([
+      {
+        $match: {
+          gymPod: new mongoose.Types.ObjectId(gymPodId),
+          slotDate,
+          startTime: start,
+          status: { $ne: "cancelled" }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: "$personsCount" }
+        }
+      }
+    ]);
 
-    if (conflict) {
+    const alreadyBooked = result[0]?.total || 0;
+
+    if (alreadyBooked + personsCount > pod.maxCapacity) {
       return res.status(400).json({
-        success: false,
-        message: "Slot already booked"
+        message: "Slot capacity full, please select another slot"
       });
     }
 
     const booking = await Booking.create({
       user: req.user.id,
       gymPod: gymPodId,
+      slotDate,
       startTime: start,
       endTime: end,
-      amountPaid: 0
+      personsCount
     });
 
     res.status(201).json({
       success: true,
-      message: "Booking confirmed",
       data: booking
     });
 
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    res.status(500).json({ message: err.message });
   }
 };
 
@@ -60,39 +82,46 @@ exports.getPodAvailability = async (req, res) => {
     const { podId } = req.params;
     const { date } = req.query;
 
+    const pod = await GymPod.findById(podId);
+    if (!pod) {
+      return res.status(404).json({ message: "Pod not found" });
+    }
+
     const slots = generateSlots(date);
 
     const bookings = await Booking.find({
-    gymPod: podId,
-    slotDate: date,
-    status: { $in: ["pending_payment", "payment_uploaded", "confirmed"] }
-  });
+      gymPod: podId,
+      slotDate: date,
+      status: { $ne: "cancelled" }
+    });
 
-  const slotMap = {};
-  bookings.forEach(b => {
-    const key = b.startTime.toISOString();
-    slotMap[key] = (slotMap[key] || 0) + b.personsCount;
-  });
+    const slotMap = {};
+
+    bookings.forEach(b => {
+      const key = b.startTime.toISOString();
+      slotMap[key] = (slotMap[key] || 0) + b.personsCount;
+    });
 
     const response = slots.map(slot => {
-    const key = slot.startTime.toISOString();
-    const booked = slotMap[key] || 0;
+      const key = slot.startTime.toISOString();
+      const booked = slotMap[key] || 0;
 
-    return {
-      startTime: slot.startTime,
-      endTime: slot.endTime,
-      bookedPersons: booked,
-      maxCapacity: 3,
-      isFull: booked >= 3
-    };
-  });
+      return {
+        startTime: slot.startTime,
+        endTime: slot.endTime,
+        bookedPersons: booked,
+        maxCapacity: pod.maxCapacity,
+        isFull: booked >= pod.maxCapacity
+      };
+    });
 
-  res.json({ success: true, data: response });
+    res.json({ success: true, data: response });
 
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    res.status(500).json({ message: err.message });
   }
 };
+
 
 /**
  * 3️⃣ GET USER BOOKINGS
