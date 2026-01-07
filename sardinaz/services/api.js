@@ -4,15 +4,15 @@ import { getAuthToken } from "./token"
 const api = axios.create({
   baseURL: process.env.EXPO_PUBLIC_API_URL,
   timeout: 15000,
-  headers: {
-    "Content-Type": "application/json",
-  },
 })
 
 api.interceptors.request.use((config) => {
   const token = getAuthToken()
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
+  }
+  if (config.data instanceof FormData) {
+    config.headers["Content-Type"] = "multipart/form-data";
   }
   return config
 })

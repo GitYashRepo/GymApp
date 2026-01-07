@@ -19,19 +19,27 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchHomePods } from "../../store/podSlice";
 import api from "../../services/api";
 
-const POD_IMAGE = require("../../assets/images/pod-1.png");
+const PLACEHOLDER_IMAGE = {
+   uri: "https://icon-library.com/images/no-picture-available-icon/no-picture-available-icon-1.jpg",
+};
 
 const PodCard = ({ pod, isFavorite, onToggleFavorite, onBookPress }) => {
    const t = useTranslate();
 
+   const imageSource =
+      pod.images && pod.images.length > 0
+         ? { uri: pod.images[0] }
+         : PLACEHOLDER_IMAGE;
+
    return (
       <View style={styles.card}>
-         <Image source={POD_IMAGE} style={styles.podImage} />
+         <Image source={imageSource} style={styles.podImage} />
 
          <View style={styles.capacityBar}>
             <Text style={styles.capacityText}>
-               Maximum Capacity: {pod.capacity || 1} pax
+               Maximum Capacity: {pod.maxCapacity || 1} pax
             </Text>
+
             <TouchableOpacity onPress={() => onToggleFavorite(pod._id)}>
                <Heart
                   size={24}
@@ -43,7 +51,7 @@ const PodCard = ({ pod, isFavorite, onToggleFavorite, onBookPress }) => {
 
          <View style={styles.detailsContainer}>
             <Text style={styles.locationName}>
-               {pod.locationName || pod.name}
+               {pod.name}
             </Text>
 
             <Text style={styles.addressText}>
@@ -51,7 +59,10 @@ const PodCard = ({ pod, isFavorite, onToggleFavorite, onBookPress }) => {
             </Text>
 
             <Text style={styles.priceText}>
-               Price: <Text style={styles.priceAmount}>HK${pod.pricePer30Min}</Text>
+               Price:{" "}
+               <Text style={styles.priceAmount}>
+                  HK${pod.pricePer30Min}
+               </Text>
                <Text style={styles.priceUnit}> /30 min</Text>
             </Text>
 
@@ -64,6 +75,7 @@ const PodCard = ({ pod, isFavorite, onToggleFavorite, onBookPress }) => {
       </View>
    );
 };
+
 
 export default function HomeScreen() {
    const router = useRouter();
@@ -84,10 +96,6 @@ export default function HomeScreen() {
       }, [token])
    );
 
-
-   useEffect(() => {
-      console.log("✅ REDUX PODS:", pods);
-   }, [pods]);
 
    const filteredPods = pods.filter((pod) =>
       (pod.locationName || pod.name || "")

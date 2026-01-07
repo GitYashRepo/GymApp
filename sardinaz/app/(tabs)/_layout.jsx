@@ -96,13 +96,17 @@ export default function TabLayout() {
                   name="home"
                   options={{ title: t("nav.home") }}
                />
-               <Tabs.Screen
+               {/* <Tabs.Screen
                   name="classes"
                   options={{ title: t("nav.classes") }}
-               />
+               /> */}
                <Tabs.Screen
                   name="content"
                   options={{ title: t("nav.content") }}
+               />
+               <Tabs.Screen
+                  name="help"
+                  options={{ title: t("nav.helpsupport") }}
                />
                <Tabs.Screen
                   name={isLoggedIn ? "profile" : "auth"}
@@ -120,15 +124,20 @@ export default function TabLayout() {
                label={t("nav.home")}
                iconName="home"
             />
-            <NavButton
+            {/*<NavButton
                name="classes"
                label={t("nav.classes")}
                iconName="dumbbell"
-            />
+            />*/}
             <NavButton
                name="content"
                label={t("nav.content")}
                iconName="play-circle"
+            />
+            <NavButton
+               name="help"
+               label={t("nav.helpsupport")}
+               iconName="help-circle"
             />
             <NavButton
                name={isLoggedIn ? "profile" : "auth"}

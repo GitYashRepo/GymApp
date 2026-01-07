@@ -10,6 +10,10 @@ import {
    SafeAreaView,
 } from "react-native"
 import { Info } from "lucide-react-native"
+import { useLocalSearchParams } from "expo-router"
+import api from "../../services/api"
+import { useEffect } from "react"
+
 
 /* ------------------ CONSTANTS ------------------ */
 
@@ -83,6 +87,9 @@ const SlotCell = memo(function SlotCell({ isSelected, onPress }) {
 /* ------------------ MAIN COMPONENT ------------------ */
 
 export default function BookingScreen() {
+   const { podId } = useLocalSearchParams()
+   const [pod, setPod] = useState(null)
+
    const days = useMemo(() => getRemainingDaysOfMonth(), [])
    const [selectedSlots, setSelectedSlots] = useState({})
 
@@ -95,11 +102,27 @@ export default function BookingScreen() {
       })
    }, [])
 
+   useEffect(() => {
+      fetchPodDetails()
+   }, [])
+
+   const fetchPodDetails = async () => {
+      try {
+         const res = await api.get(`/pods/${podId}`)
+         setPod(res.data.data)
+      } catch (err) {
+         console.log("❌ Failed to fetch pod details", err)
+      }
+   }
+
+
    return (
       <SafeAreaView style={styles.container}>
          {/* HEADER */}
          <View style={styles.header}>
-            <Text style={styles.headerTitle}>Changi City Point</Text>
+            <Text style={styles.headerTitle}>
+               {pod?.locationName || "Loading..."}
+            </Text>
          </View>
 
          {/* MONTH */}

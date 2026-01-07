@@ -97,6 +97,11 @@ export default function AdminLayout() {
                icon="plus-box"
             />
             <NavItem
+               name="pods-card"
+               label="My Pods"
+               icon="view-list"
+            />
+            <NavItem
                name="dashboard"
                label="Dashboard"
                icon="view-dashboard"
