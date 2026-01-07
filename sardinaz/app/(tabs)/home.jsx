@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useFocusEffect } from "expo-router";
 import { useCallback } from "react";
+import { Alert } from "react-native";
 import {
    View,
    Text,
@@ -96,6 +97,27 @@ export default function HomeScreen() {
       }, [token])
    );
 
+   const handleBookPress = (podId) => {
+      if (!token) {
+         Alert.alert(
+            "Login Required",
+            "Login First !!",
+            [
+               { text: "Cancel", style: "cancel" },
+               {
+                  text: "Login",
+                  onPress: () => router.push("/login"), // change route if needed
+               },
+            ],
+            { cancelable: true }
+         );
+         return;
+      }
+
+      router.push(`/booking/${podId}`);
+   };
+
+
 
    const filteredPods = pods.filter((pod) =>
       (pod.locationName || pod.name || "")
@@ -166,7 +188,7 @@ export default function HomeScreen() {
                      pod={item}
                      isFavorite={favorites.has(item._id)}
                      onToggleFavorite={toggleFavorite}
-                     onBookPress={() => router.push(`/booking/${item._id}`)}
+                     onBookPress={() => handleBookPress(item._id)}
                   />
                )}
                contentContainerStyle={styles.listContainer}

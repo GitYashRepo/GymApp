@@ -150,23 +150,41 @@ export default function BookingScreen() {
    /* ------------------ FETCH POD ------------------ */
 
    useEffect(() => {
-      api.get(`/pods/${podId}`).then(r => setPod(r.data.data))
-   }, [])
+      if (!podId) return
+
+      api.get(`/pods/${podId}`)
+         .then(r => setPod(r.data.data))
+         .catch(err => console.log("❌ Pod fetch error:", err.response?.data))
+   }, [podId])
+
 
    /* ------------------ FETCH AVAILABILITY ------------------ */
 
    useEffect(() => {
+      if (!podId || !pod) return
+
       days.forEach(async d => {
-         const res = await api.get(
-            `/bookings/availability/${podId}?date=${d.id}`
-         )
-         const map = {}
-         res.data.data.forEach(s => {
-            map[new Date(s.startTime).getTime()] = s
-         })
-         setAvailability(p => ({ ...p, [d.id]: map }))
+         try {
+            const res = await api.get(
+               `/bookings/availability/${podId}?date=${d.id}`
+            )
+
+            const map = {}
+            res.data.data.forEach(s => {
+               map[new Date(s.startTime).getTime()] = s
+            })
+
+            setAvailability(p => ({ ...p, [d.id]: map }))
+         } catch (err) {
+            console.log(
+               "❌ Availability error:",
+               err.response?.status,
+               err.response?.data
+            )
+         }
       })
-   }, [])
+   }, [podId, pod])
+
 
    /* ------------------ SLOT ACTIONS ------------------ */
 
