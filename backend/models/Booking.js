@@ -34,23 +34,18 @@ const bookingSchema = new mongoose.Schema({
     type: Number,
     required: true,
     min: 1,
-    max: 3
   },
 
   // PAYMENT FLOW
   status: {
     type: String,
     enum: [
-      "pending_payment",
-      "payment_uploaded",
       "confirmed",
       "completed",
       "cancelled"
     ],
-    default: "pending_payment"
+    default: "confirmed"
   },
-
-  amountPaid: Number,
 
   paymentProof: {
     image: String,
@@ -66,8 +61,8 @@ const bookingSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Admin"
   },
-  verifiedAt: Date
 
+  verifiedAt: Date
 }, { timestamps: true });
 
 
