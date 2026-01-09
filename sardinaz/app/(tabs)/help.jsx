@@ -26,7 +26,17 @@ export default function HelpScreen() {
       Linking.openURL("tel:+85297935676");
    };
 
+   const openInstagram = async () => {
+      const url = "https://www.instagram.com/p/DTNr_qMk1wX/?igsh=MW03OGF1ZHJiYnU3cA==";
 
+      const supported = await Linking.canOpenURL(url);
+      if (!supported) {
+         Alert.alert("Error", "Instagram is not available on this device.");
+         return;
+      }
+
+      Linking.openURL(url);
+   };
 
    return (
       <ScrollView style={styles.container}>
@@ -79,6 +89,16 @@ export default function HelpScreen() {
                title="Call Support"
                description="+85297935676"
                onPress={openPhoneTwo}
+            />
+         </Section>
+
+         {/* Social Media Section */}
+         <Section title="Follow Us on Instagram">
+            <Item
+               icon="instagram"
+               title="@sardinazgym"
+               description="Follow us for updates, offers & workouts"
+               onPress={openInstagram}
             />
          </Section>
 
