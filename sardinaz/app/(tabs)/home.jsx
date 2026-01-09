@@ -124,6 +124,14 @@ export default function HomeScreen() {
       }, [token])
    );
 
+   useFocusEffect(
+      useCallback(() => {
+         // when Home screen is focused again
+         setBookingPodId(null);
+      }, [])
+   );
+
+
    const handleBookPress = (podId) => {
       if (!token) {
          Alert.alert("Login Required", "Login First !!", [

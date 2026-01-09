@@ -2,7 +2,7 @@ import axios from "axios"
 import { getAuthToken } from "./token"
 
 const api = axios.create({
-  baseURL: process.env.EXPO_PRIVATE_API_URL,
+  baseURL: process.env.EXPO_PUBLIC_API_URL,
   timeout: 15000,
 })
 

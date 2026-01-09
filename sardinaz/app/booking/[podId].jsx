@@ -1,5 +1,3 @@
-"use client"
-
 import React, { useMemo, useState, useEffect } from "react"
 import * as MediaLibrary from "expo-media-library"
 import { Asset } from "expo-asset"
@@ -21,6 +19,9 @@ import api from "../../services/api"
 import { useDispatch } from "react-redux"
 import { createMultiSlotBooking } from "../../store/bookingSlice"
 import * as Notifications from "expo-notifications"
+import { useSelector } from "react-redux"
+import { fetchMyBookings } from "../../store/bookingSlice"
+
 
 const scheduleReminderNotification = async (startTime, podName) => {
    // 30 minutes before
@@ -144,7 +145,7 @@ export default function BookingScreen() {
    const dispatch = useDispatch()
    const { podId } = useLocalSearchParams()
    const days = useMemo(() => generateDates(), [])
-
+   const { bookings } = useSelector(state => state.booking)
    const [pod, setPod] = useState(null)
    const [availability, setAvailability] = useState({})
    const [selectedSlots, setSelectedSlots] = useState({})
@@ -167,6 +168,12 @@ export default function BookingScreen() {
    const isTodayBooking = Object.values(selectedSlots).some(
       s => s.dayId === getLocalDateId()
    )
+
+
+   useEffect(() => {
+      dispatch(fetchMyBookings())
+   }, [])
+
 
    /* ------------------ FETCH POD ------------------ */
 
@@ -213,35 +220,41 @@ export default function BookingScreen() {
       const start = buildSlotDate(day.id, time)
       const key = start.getTime()
 
-      const slot =
-         availability[day.id]?.[key] || {
-            bookedPersons: 0,
-            maxCapacity: pod.maxCapacity,
-         }
+      // ❌ Same user already booked
+      if (myBookedSlots[key]) return
 
-      if (slot.bookedPersons >= slot.maxCapacity) return
+      // ❌ Same session already selected
+      if (selectedSlots[key]) return
+
+      if (!pod) return
+
+      const slot = availability[day.id]?.[key]
+      const backendBooked = slot?.bookedPersons ?? 0
+      const tempSelected = selectedSlots[key]?.persons ?? 0
+      const maxCapacity = pod.maxCapacity ?? 1
+
       if (isPastSlot(day.id, start)) return
 
       const remainingCapacity =
-         slot.maxCapacity - slot.bookedPersons
+         maxCapacity - backendBooked - tempSelected
 
-      const initialPersons = Math.min(
-         selectedSlots[key]?.persons || 1,
-         remainingCapacity
-      )
+      if (remainingCapacity <= 0) return
 
-      setPersons(initialPersons)
+      // ✅ ALWAYS SAFE NUMBER
+      setPersons(1)
 
       setActiveSlot({
          key,
          dayId: day.id,
          startTime: start,
-         slot,
          remainingCapacity,
       })
 
       setSlotModal(true)
    }
+
+
+
 
 
    const confirmSlot = () => {
@@ -260,6 +273,16 @@ export default function BookingScreen() {
       setSlotModal(false)
       setActiveSlot(null)
    }
+
+   const myBookedSlots = useMemo(() => {
+      const map = {}
+      bookings.forEach(b => {
+         const start = new Date(b.startTime).getTime()
+         map[start] = b.personsCount
+      })
+      return map
+   }, [bookings])
+
 
 
    const removeSlot = () => {
@@ -436,15 +459,17 @@ export default function BookingScreen() {
                               const isFull =
                                  slot.bookedPersons >= slot.maxCapacity
                               const isPast = isPastSlot(d.id, start)
+                              const isMine = !!myBookedSlots[key]
 
                               return (
                                  <Pressable
                                     key={d.id}
-                                    disabled={isFull || isPast}
+                                    disabled={isFull || isPast || isSelected || isMine}
                                     onPress={() => openSlot(d, t)}
                                     style={[
                                        styles.slot,
                                        isSelected && styles.slotSelected,
+                                       isMine && styles.slotMine,
                                        isFull && styles.slotFull,
                                        isPast && styles.slotPast,
                                     ]}
@@ -496,7 +521,9 @@ export default function BookingScreen() {
 
                   <View style={styles.counter}>
                      <Pressable
-                        onPress={() => setPersons(p => Math.max(1, p - 1))}
+                        onPress={() =>
+                           setPersons(p => Math.max(1, Number(p || 1) - 1))
+                        }
                      >
                         <Text style={styles.counterBtn}>−</Text>
                      </Pressable>
@@ -505,12 +532,11 @@ export default function BookingScreen() {
                         disabled={
                            !activeSlot || persons >= activeSlot.remainingCapacity
                         }
-                        onPress={() => {
-                           if (!activeSlot) return
+                        onPress={() =>
                            setPersons(p =>
-                              Math.min(p + 1, activeSlot.remainingCapacity)
+                              Math.min(Number(p || 1) + 1, activeSlot.remainingCapacity)
                            )
-                        }}
+                        }
                      >
                         <Text style={styles.counterBtn}>+</Text>
                      </Pressable>
@@ -615,4 +641,8 @@ const styles = StyleSheet.create({
    closeText: { color: "#aaa", fontSize: 18, fontWeight: "700" },
    downloadBtn: { marginTop: 10, borderWidth: 1, borderColor: "#FF6D00", padding: 10, borderRadius: 6 },
    downloadText: { color: "#FF6D00", fontWeight: "700" },
+   slotMine: {
+      backgroundColor: "#444",
+      opacity: 0.6,
+   },
 })
