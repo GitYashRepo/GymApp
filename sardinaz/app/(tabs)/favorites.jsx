@@ -15,7 +15,6 @@ import { useFocusEffect } from "expo-router";
 import { useCallback } from "react";
 
 
-const POD_IMAGE = require("../../assets/images/pod-1.png");
 const PUPPY_IMAGE = {
    uri: "https://icon-library.com/images/no-picture-available-icon/no-picture-available-icon-1.jpg"
 };
