@@ -1,7 +1,5 @@
-import { useState, useEffect } from "react";
-import { useFocusEffect } from "expo-router";
-import { useCallback } from "react";
-import { Alert } from "react-native";
+import { useState, useEffect, useCallback } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
 import {
    View,
    Text,
@@ -12,9 +10,11 @@ import {
    Image,
    SafeAreaView,
    ActivityIndicator,
+   Alert,
+   Modal,
+   Linking,
 } from "react-native";
 import { Heart } from "lucide-react-native";
-import { useRouter } from "expo-router";
 import { useTranslate } from "../../localization/useTranslate";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchHomePods } from "../../store/podSlice";
@@ -24,7 +24,15 @@ const PLACEHOLDER_IMAGE = {
    uri: "https://icon-library.com/images/no-picture-available-icon/no-picture-available-icon-1.jpg",
 };
 
-const PodCard = ({ pod, isFavorite, onToggleFavorite, onBookPress, isBooking }) => {
+/* -------------------- POD CARD -------------------- */
+const PodCard = ({
+   pod,
+   isFavorite,
+   onToggleFavorite,
+   onBookPress,
+   onSubscriptionPress,
+   isBooking,
+}) => {
    const t = useTranslate();
 
    const imageSource =
@@ -51,54 +59,60 @@ const PodCard = ({ pod, isFavorite, onToggleFavorite, onBookPress, isBooking }) 
          </View>
 
          <View style={styles.detailsContainer}>
-            <Text style={styles.locationName}>
-               {pod.name}
-            </Text>
+            <Text style={styles.locationName}>{pod.name}</Text>
 
             <Text style={styles.addressText}>
                📍 {pod.locationName || "Location not available"}
             </Text>
 
             <Text style={styles.priceText}>
-               Price:{" "}
-               <Text style={styles.priceAmount}>
-                  HK${pod.pricePer30Min}
-               </Text>
+               Price: <Text style={styles.priceAmount}>HK${pod.pricePer30Min}</Text>
                <Text style={styles.priceUnit}> /30 min</Text>
             </Text>
 
-            <TouchableOpacity
-               style={[
-                  styles.bookButton,
-                  isBooking && { opacity: 0.7 },
-               ]}
-               onPress={onBookPress}
-               disabled={isBooking}
-            >
-               {isBooking ? (
-                  <ActivityIndicator size="small" color="#000" />
-               ) : (
-                  <Text style={styles.bookButtonText}>
-                     {t("common.book_now")}
+            {/* BOOK NOW + MONTHLY */}
+            <View style={styles.buttonRow}>
+               <TouchableOpacity
+                  style={[styles.bookButton, isBooking && { opacity: 0.7 }]}
+                  onPress={onBookPress}
+                  disabled={isBooking}
+               >
+                  {isBooking ? (
+                     <ActivityIndicator size="small" color="#000" />
+                  ) : (
+                     <Text style={styles.bookButtonText}>
+                        {t("common.book_now")}
+                     </Text>
+                  )}
+               </TouchableOpacity>
+
+               <TouchableOpacity
+                  style={styles.subscriptionMiniButton}
+                  onPress={onSubscriptionPress}
+               >
+                  <Text style={styles.subscriptionMiniButtonText}>
+                     Get Monthly Subscription
                   </Text>
-               )}
-            </TouchableOpacity>
+               </TouchableOpacity>
+            </View>
          </View>
       </View>
    );
 };
 
-
+/* -------------------- HOME SCREEN -------------------- */
 export default function HomeScreen() {
    const router = useRouter();
    const dispatch = useDispatch();
    const { pods, loading } = useSelector((state) => state.pods);
    const { token } = useSelector((state) => state.auth);
+
    const [searchQuery, setSearchQuery] = useState("");
    const [favorites, setFavorites] = useState(new Set());
    const [updating, setUpdating] = useState(false);
-   const [bookingPodId, setBookingPodId] = useState(null)
-
+   const [bookingPodId, setBookingPodId] = useState(null);
+   const [subscriptionModalVisible, setSubscriptionModalVisible] = useState(false);
+   const [selectedPod, setSelectedPod] = useState(null);
 
    useEffect(() => {
       dispatch(fetchHomePods());
@@ -112,39 +126,18 @@ export default function HomeScreen() {
 
    const handleBookPress = (podId) => {
       if (!token) {
-         Alert.alert(
-            "Login Required",
-            "Login First !!",
-            [
-               { text: "Cancel", style: "cancel" },
-               {
-                  text: "Login",
-                  onPress: () => router.push("/login"),
-               },
-            ],
-            { cancelable: true }
-         )
-         return
+         Alert.alert("Login Required", "Login First !!", [
+            { text: "Cancel", style: "cancel" },
+            { text: "Login", onPress: () => router.push("/login") },
+         ]);
+         return;
       }
 
-      // 1️⃣ show loader immediately
-      setBookingPodId(podId)
-
-      // 2️⃣ wait for UI to paint
+      setBookingPodId(podId);
       requestAnimationFrame(() => {
-         router.push(`/booking/${podId}`)
-      })
-   }
-
-
-
-
-
-   const filteredPods = pods.filter((pod) =>
-      (pod.locationName || pod.name || "")
-         .toLowerCase()
-         .includes(searchQuery.toLowerCase())
-   );
+         router.push(`/booking/${podId}`);
+      });
+   };
 
    const fetchFavorites = async () => {
       try {
@@ -155,7 +148,6 @@ export default function HomeScreen() {
          console.log("❌ Fetch favorites error", err);
       }
    };
-
 
    const toggleFavorite = async (podId) => {
       if (updating) return;
@@ -176,17 +168,46 @@ export default function HomeScreen() {
             return next;
          });
       } catch (err) {
-         console.log("❌ Favorite error:", err.response?.data || err.message);
+         console.log("❌ Favorite error:", err.message);
       } finally {
          setUpdating(false);
       }
    };
 
+   const handleWhatsAppRedirect = () => {
+      if (!selectedPod) return;
 
+      const phoneNumber = "85293605397";
 
+      const message = `
+Hello Sardinaz Gym,
+
+I am interested in subscribing to your monthly plan for the Gym Pod.
+
+Pod Name: ${selectedPod.name}
+Location: ${selectedPod.locationName || "N/A"}
+
+Kindly share more details regarding the subscription.
+
+Thank you.
+    `.trim();
+
+      const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+
+      Linking.openURL(url).catch(() =>
+         Alert.alert("Error", "WhatsApp is not installed on your device")
+      );
+   };
+
+   const filteredPods = pods.filter((pod) =>
+      (pod.locationName || pod.name || "")
+         .toLowerCase()
+         .includes(searchQuery.toLowerCase())
+   );
 
    return (
       <SafeAreaView style={styles.container}>
+         {/* SEARCH */}
          <View style={styles.searchBarContainer}>
             <Text style={styles.searchIcon}>🔍</Text>
             <TextInput
@@ -204,125 +225,136 @@ export default function HomeScreen() {
             <FlatList
                data={filteredPods}
                keyExtractor={(item) => item._id}
+               contentContainerStyle={styles.listContainer}
                renderItem={({ item }) => (
                   <PodCard
                      pod={item}
                      isFavorite={favorites.has(item._id)}
                      onToggleFavorite={toggleFavorite}
                      onBookPress={() => handleBookPress(item._id)}
+                     onSubscriptionPress={() => {
+                        setSelectedPod(item);
+                        setSubscriptionModalVisible(true);
+                     }}
                      isBooking={bookingPodId === item._id}
                   />
                )}
-               contentContainerStyle={styles.listContainer}
-               ListEmptyComponent={
-                  <View style={styles.emptyContainer}>
-                     <Text style={styles.emptyText}>No pods found.</Text>
-                  </View>
-               }
             />
          )}
+
+         {/* MODAL */}
+         <Modal transparent animationType="fade" visible={subscriptionModalVisible}>
+            <View style={styles.modalOverlay}>
+               <View style={styles.modalContainer}>
+                  <Text style={styles.modalTitle}>
+                     Get monthly subscription at just 375 HKD !!
+                  </Text>
+
+                  <Text style={styles.modalSubText}>
+                     {selectedPod?.name} • {selectedPod?.locationName}
+                  </Text>
+
+                  <TouchableOpacity
+                     style={styles.modalBookButton}
+                     onPress={handleWhatsAppRedirect}
+                  >
+                     <Text style={styles.modalBookButtonText}>Book Now</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                     onPress={() => setSubscriptionModalVisible(false)}
+                  >
+                     <Text style={styles.modalCloseText}>Cancel</Text>
+                  </TouchableOpacity>
+               </View>
+            </View>
+         </Modal>
       </SafeAreaView>
    );
 }
 
-
+/* -------------------- STYLES -------------------- */
 const styles = StyleSheet.create({
-   container: {
-      flex: 1,
-      backgroundColor: "#1a1a1a",
-      paddingBottom: 80,
-   },
+   container: { flex: 1, backgroundColor: "#1a1a1a" },
    searchBarContainer: {
       flexDirection: "row",
-      alignItems: "center",
       backgroundColor: "#333",
+      margin: 16,
       borderRadius: 8,
-      paddingHorizontal: 12,
-      marginHorizontal: 16,
-      marginVertical: 12,
+      padding: 12,
    },
-   searchIcon: {
-      fontSize: 16,
-      marginRight: 8,
-   },
-   searchInput: {
-      flex: 1,
-      paddingVertical: 10,
-      color: "#fff",
-      fontSize: 14,
-   },
-   listContainer: {
-      padding: 16,
-      gap: 16,
-   },
-   card: {
-      backgroundColor: "#2a2a2a",
-      borderRadius: 12,
-      overflow: "hidden",
-      marginBottom: 8,
-   },
-   podImage: {
-      width: "100%",
-      height: 200,
-      backgroundColor: "#404040",
-   },
+   searchIcon: { marginRight: 8 },
+   searchInput: { flex: 1, color: "#fff" },
+
+   listContainer: { padding: 16 },
+
+   card: { backgroundColor: "#2a2a2a", borderRadius: 12, marginBottom: 16 },
+   podImage: { width: "100%", height: 200 },
    capacityBar: {
       backgroundColor: "#FF6D00",
       flexDirection: "row",
       justifyContent: "space-between",
-      alignItems: "center",
-      paddingHorizontal: 16,
-      paddingVertical: 12,
+      padding: 16,
    },
-   capacityText: {
-      fontSize: 14,
-      fontWeight: "bold",
-      color: "#000",
-   },
-   detailsContainer: {
-      paddingHorizontal: 16,
-      paddingVertical: 16,
-   },
-   locationName: {
-      fontSize: 18,
-      fontWeight: "bold",
-      color: "#FF6D00",
-      marginBottom: 8,
-   },
-   addressText: {
-      fontSize: 12,
-      color: "#aaa",
-      marginBottom: 12,
-   },
-   priceText: {
-      fontSize: 14,
-      color: "#FF6D00",
-      fontWeight: "bold",
-      marginBottom: 8,
-   },
-   priceAmount: {
-      fontSize: 16,
-   },
-   priceUnit: {
-      fontSize: 12,
-   },
+   capacityText: { fontWeight: "bold" },
+
+   detailsContainer: { padding: 16 },
+   locationName: { color: "#FF6D00", fontSize: 18, fontWeight: "bold" },
+   addressText: { color: "#aaa", marginVertical: 6 },
+   priceText: { color: "#FF6D00", fontWeight: "bold" },
+
+   buttonRow: { flexDirection: "row", gap: 10, marginTop: 12 },
+
    bookButton: {
+      flex: 1,
       backgroundColor: "#FF6D00",
       paddingVertical: 12,
       borderRadius: 20,
       alignItems: "center",
    },
-   bookButtonText: {
-      fontSize: 14,
-      fontWeight: "bold",
-      color: "#000",
+   bookButtonText: { fontWeight: "bold", color: "#000" },
+
+   subscriptionMiniButton: {
+      backgroundColor: "#333",
+      borderWidth: 1,
+      borderColor: "#FF6D00",
+      borderRadius: 20,
+      paddingHorizontal: 16,
+      justifyContent: "center",
    },
-   emptyContainer: {
-      paddingVertical: 40,
+   subscriptionMiniButtonText: {
+      color: "#FF6D00",
+      fontWeight: "bold",
+      fontSize: 12,
+   },
+
+   modalOverlay: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.7)",
+      justifyContent: "center",
       alignItems: "center",
    },
-   emptyText: {
-      fontSize: 16,
-      color: "#666",
+   modalContainer: {
+      backgroundColor: "#2a2a2a",
+      padding: 24,
+      borderRadius: 12,
+      width: "85%",
+      alignItems: "center",
    },
+   modalTitle: {
+      color: "#FF6D00",
+      fontSize: 18,
+      fontWeight: "bold",
+      textAlign: "center",
+   },
+   modalSubText: { color: "#aaa", marginVertical: 10, textAlign: "center" },
+   modalBookButton: {
+      backgroundColor: "#FF6D00",
+      paddingVertical: 12,
+      paddingHorizontal: 30,
+      borderRadius: 25,
+      marginBottom: 10,
+   },
+   modalBookButtonText: { color: "#000", fontWeight: "bold" },
+   modalCloseText: { color: "#aaa" },
 });
