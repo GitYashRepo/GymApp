@@ -7,67 +7,71 @@ import {
    Pressable,
 } from "react-native"
 import { MaterialCommunityIcons } from "@expo/vector-icons"
+import { useEffect } from "react"
+import { useDispatch, useSelector } from "react-redux"
+import { fetchMyBookings } from "../../store/bookingSlice"
+
 
 /* ------------------ MOCK DATA (MORE DATASETS) ------------------ */
 
-const BOOKINGS = [
-   {
-      id: "1",
-      title: "Personal Training",
-      date: "2026-01-10",
-      time: "10:00 AM - 11:00 AM",
-      duration: "60 min",
-      status: "upcoming",
-   },
-   {
-      id: "2",
-      title: "Yoga Class",
-      date: "2025-12-20",
-      time: "6:30 PM - 7:30 PM",
-      duration: "60 min",
-      status: "completed",
-   },
-   {
-      id: "3",
-      title: "Strength Training",
-      date: "2025-12-05",
-      time: "8:00 AM - 8:30 AM",
-      duration: "30 min",
-      status: "cancelled",
-   },
-   {
-      id: "4",
-      title: "HIIT Workout",
-      date: "2026-01-18",
-      time: "7:00 AM - 8:00 AM",
-      duration: "60 min",
-      status: "upcoming",
-   },
-   {
-      id: "5",
-      title: "Pilates Session",
-      date: "2025-11-28",
-      time: "5:00 PM - 6:00 PM",
-      duration: "60 min",
-      status: "completed",
-   },
-   {
-      id: "6",
-      title: "Cardio Blast",
-      date: "2025-11-15",
-      time: "6:00 AM - 6:30 AM",
-      duration: "30 min",
-      status: "completed",
-   },
-   {
-      id: "7",
-      title: "Cross Training",
-      date: "2025-12-02",
-      time: "9:00 AM - 10:00 AM",
-      duration: "60 min",
-      status: "cancelled",
-   },
-]
+// const BOOKINGS = [
+//    {
+//       id: "1",
+//       title: "Personal Training",
+//       date: "2026-01-10",
+//       time: "10:00 AM - 11:00 AM",
+//       duration: "60 min",
+//       status: "upcoming",
+//    },
+//    {
+//       id: "2",
+//       title: "Yoga Class",
+//       date: "2025-12-20",
+//       time: "6:30 PM - 7:30 PM",
+//       duration: "60 min",
+//       status: "completed",
+//    },
+//    {
+//       id: "3",
+//       title: "Strength Training",
+//       date: "2025-12-05",
+//       time: "8:00 AM - 8:30 AM",
+//       duration: "30 min",
+//       status: "cancelled",
+//    },
+//    {
+//       id: "4",
+//       title: "HIIT Workout",
+//       date: "2026-01-18",
+//       time: "7:00 AM - 8:00 AM",
+//       duration: "60 min",
+//       status: "upcoming",
+//    },
+//    {
+//       id: "5",
+//       title: "Pilates Session",
+//       date: "2025-11-28",
+//       time: "5:00 PM - 6:00 PM",
+//       duration: "60 min",
+//       status: "completed",
+//    },
+//    {
+//       id: "6",
+//       title: "Cardio Blast",
+//       date: "2025-11-15",
+//       time: "6:00 AM - 6:30 AM",
+//       duration: "30 min",
+//       status: "completed",
+//    },
+//    {
+//       id: "7",
+//       title: "Cross Training",
+//       date: "2025-12-02",
+//       time: "9:00 AM - 10:00 AM",
+//       duration: "60 min",
+//       status: "cancelled",
+//    },
+// ]
 
 /* ------------------ STATUS CONFIG ------------------ */
 
@@ -101,13 +105,47 @@ const FILTERS = [
 /* ------------------ COMPONENT ------------------ */
 
 export default function MyBookingsScreen() {
+   const dispatch = useDispatch()
+   const { bookings, loading } = useSelector((state) => state.booking)
    const [filter, setFilter] = useState("all")
    const [dropdownOpen, setDropdownOpen] = useState(false)
 
+
+   useEffect(() => {
+      dispatch(fetchMyBookings())
+   }, [])
+
+
    const filteredBookings = useMemo(() => {
-      if (filter === "all") return BOOKINGS
-      return BOOKINGS.filter((b) => b.status === filter)
-   }, [filter])
+      let list = bookings.map((b) => {
+         const now = new Date()
+         const status =
+            b.status === "cancelled"
+               ? "cancelled"
+               : new Date(b.endTime) < now
+                  ? "completed"
+                  : "upcoming"
+
+         return {
+            id: b._id,
+            title: b.gymPod?.name || "Gym Pod",
+            date: b.slotDate,
+            time: `${new Date(b.startTime).toLocaleTimeString([], {
+               hour: "2-digit",
+               minute: "2-digit",
+            })} - ${new Date(b.endTime).toLocaleTimeString([], {
+               hour: "2-digit",
+               minute: "2-digit",
+            })}`,
+            duration: `${b.slotsCount * 30} min`,
+            status,
+         }
+      })
+
+      if (filter === "all") return list
+      return list.filter((b) => b.status === filter)
+   }, [filter, bookings])
+
 
    const renderItem = ({ item }) => {
       const status = STATUS_CONFIG[item.status]

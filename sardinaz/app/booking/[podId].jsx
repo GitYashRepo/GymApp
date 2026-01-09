@@ -1,6 +1,9 @@
 "use client"
 
 import React, { useMemo, useState, useEffect } from "react"
+import * as MediaLibrary from "expo-media-library"
+import { Asset } from "expo-asset"
+import * as FileSystem from "expo-file-system/legacy"
 import {
    View,
    Text,
@@ -10,10 +13,31 @@ import {
    SafeAreaView,
    Modal,
    Image,
+   Alert
 } from "react-native"
 import { useLocalSearchParams } from "expo-router"
 import * as ImagePicker from "expo-image-picker"
 import api from "../../services/api"
+import { useDispatch } from "react-redux"
+import { createMultiSlotBooking } from "../../store/bookingSlice"
+import * as Notifications from "expo-notifications"
+
+const scheduleReminderNotification = async (startTime, podName) => {
+   // 30 minutes before
+   const reminderTime = new Date(startTime.getTime() - 30 * 60 * 1000)
+
+   // If time already passed, do nothing
+   if (reminderTime <= new Date()) return
+
+   await Notifications.scheduleNotificationAsync({
+      content: {
+         title: "Gym Reminder 🏋️",
+         body: `Your session at ${podName} starts in 30 minutes`,
+      },
+      trigger: reminderTime,
+   })
+}
+
 
 /* ------------------ DATE HELPERS ------------------ */
 
@@ -95,21 +119,17 @@ const generateDates = () => {
 
 const TIME_SLOTS = (() => {
    const slots = []
-   let h = 6
-   let m = 0
-   while (h < 23) {
-      const p = h >= 12 ? "PM" : "AM"
-      const dh = h % 12 === 0 ? 12 : h % 12
-      const dm = m === 0 ? "00" : "30"
-      slots.push(`${dh}:${dm} ${p}`)
-      m += 30
-      if (m === 60) {
-         m = 0
-         h++
+   for (let h = 0; h < 24; h++) {
+      for (let m of [0, 30]) {
+         const period = h >= 12 ? "PM" : "AM"
+         const displayHour = h % 12 === 0 ? 12 : h % 12
+         const displayMinute = m === 0 ? "00" : "30"
+         slots.push(`${displayHour}:${displayMinute} ${period}`)
       }
    }
    return slots
 })()
+
 
 /* ------------------ GRID CONSTANTS ------------------ */
 
@@ -121,6 +141,7 @@ const TIME_COL_WIDTH = 70
 /* ------------------ MAIN ------------------ */
 
 export default function BookingScreen() {
+   const dispatch = useDispatch()
    const { podId } = useLocalSearchParams()
    const days = useMemo(() => generateDates(), [])
 
@@ -227,7 +248,7 @@ export default function BookingScreen() {
       if (!activeSlot) return
 
       if (persons > activeSlot.remainingCapacity) {
-         alert("Selected persons exceed available capacity")
+         Alert.alert("Selected persons exceed available capacity")
          return
       }
 
@@ -261,19 +282,102 @@ export default function BookingScreen() {
    }
 
    const confirmPayment = async () => {
-      for (const s of Object.values(selectedSlots)) {
-         await api.post("/bookings", {
-            gymPodId: podId,
-            slotDate: s.dayId,
-            startTime: s.startTime,
-            personsCount: s.persons,
-         })
+      if (!isTodayBooking && !paymentImage) {
+         Alert.alert("Payment Required", "Upload payment screenshot");
+         return;
       }
 
-      setSelectedSlots({})
-      setPaymentImage(null)
-      setPaymentModal(false)
+      try {
+         // ------------------ BOOKING ------------------
+         const slots = Object.values(selectedSlots).sort(
+            (a, b) => a.startTime - b.startTime
+         );
+
+         const startTime = slots[0].startTime;
+         const endTime = new Date(startTime.getTime() + slots.length * 30 * 60 * 1000);
+
+         const bookingData = {
+            gymPodId: podId,
+            slotDate: slots[0].dayId,
+            startTime,
+            endTime,
+            slotsCount: slots.length,
+            personsCount: Math.max(...slots.map(s => s.persons)),
+            bookingType: isTodayBooking ? "same_day" : "future_day",
+         };
+
+         const result = await dispatch(
+            createMultiSlotBooking({ bookingData, paymentImage })
+         );
+
+         if (!createMultiSlotBooking.fulfilled.match(result)) {
+            throw new Error("Booking API failed");
+         }
+
+         // ------------------ USER ALERT (ALWAYS SHOW) ------------------
+         const podName = pod?.name || "Gym Pod";
+
+         Alert.alert(
+            "Booking Confirmed ✅",
+            `Pod: ${podName}\nDate: ${bookingData.slotDate}\nTime: ${startTime.toLocaleTimeString()}`
+         );
+
+         // ------------------ NOTIFICATIONS (NON-BLOCKING) ------------------
+         if (__DEV__) {
+            // Expo Go SAFE notification
+            Notifications.scheduleNotificationAsync({
+               content: {
+                  title: "Booking Confirmed ✅",
+                  body: `Your booking for ${podName} is confirmed`,
+               },
+               trigger: null, // ONLY SAFE OPTION in Expo Go
+            });
+         }
+
+         // ------------------ RESET UI ------------------
+         setSelectedSlots({});
+         setPaymentImage(null);
+         setPaymentModal(false);
+
+      } catch (err) {
+         console.log("❌ CONFIRM PAYMENT ERROR:", err);
+         Alert.alert("Booking Failed", "Please try again later");
+      }
+   };
+
+
+
+
+
+   const downloadQRCode = async () => {
+      try {
+         // Load bundled asset correctly
+         const asset = Asset.fromModule(
+            require("../../assets/images/qr.jpeg")
+         )
+         await asset.downloadAsync()
+
+         // Create a real file with extension
+         const fileUri =
+            FileSystem.cacheDirectory + "gym_qr_code.jpeg"
+
+         await FileSystem.copyAsync({
+            from: asset.localUri,
+            to: fileUri,
+         })
+
+         // Save to gallery
+         await MediaLibrary.createAssetAsync(fileUri)
+
+         Alert.alert("Success", "QR Code saved to gallery 📥")
+      } catch (err) {
+         console.log("QR DOWNLOAD ERROR:", err)
+         Alert.alert("Error", "Failed to download QR Code")
+      }
    }
+
+
+
 
    /* ------------------ RENDER ------------------ */
 
@@ -445,6 +549,14 @@ export default function BookingScreen() {
                      style={{ width: 160, height: 160 }}
                   />
 
+                  <Pressable
+                     style={styles.downloadBtn}
+                     onPress={downloadQRCode}
+                  >
+                     <Text style={styles.downloadText}>DOWNLOAD QR CODE</Text>
+                  </Pressable>
+
+
                   {!isTodayBooking && (
                      <Pressable style={styles.uploadBtn} onPress={pickImage}>
                         <Text style={styles.uploadText}>
@@ -501,4 +613,6 @@ const styles = StyleSheet.create({
    uploadText: { color: "#FF6D00" },
    closeBtn: { position: "absolute", top: 10, right: 10 },
    closeText: { color: "#aaa", fontSize: 18, fontWeight: "700" },
+   downloadBtn: { marginTop: 10, borderWidth: 1, borderColor: "#FF6D00", padding: 10, borderRadius: 6 },
+   downloadText: { color: "#FF6D00", fontWeight: "700" },
 })

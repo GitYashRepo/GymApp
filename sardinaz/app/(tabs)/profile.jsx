@@ -23,7 +23,7 @@ import { logout } from "../../store/authSlice"
 export default function ProfileScreen() {
    const dispatch = useDispatch()
    const router = useRouter()
-
+   const [bookingCount, setBookingCount] = useState(0)
    const [user, setUser] = useState(null)
    const [loading, setLoading] = useState(true)
    const [error, setError] = useState("")
@@ -33,11 +33,22 @@ export default function ProfileScreen() {
 
    const { token } = useSelector((state) => state.auth);
 
+   const fetchBookingCount = async () => {
+      try {
+         const res = await api.get("/bookings/my")
+         setBookingCount(res.data.data.length)
+      } catch {
+         console.log("❌ Failed to fetch booking count")
+      }
+   }
+
+
    useFocusEffect(
       useCallback(() => {
          if (token) {
             fetchProfile();
             fetchFavoriteCount();
+            fetchBookingCount()
          }
       }, [token])
    );
@@ -215,7 +226,7 @@ export default function ProfileScreen() {
                <View style={styles.statsContainer}>
                   <View style={styles.statItem}>
                      <MaterialCommunityIcons name="calendar-check" size={24} color="#FF6D00" />
-                     <Text style={styles.statValue}>10</Text>
+                     <Text style={styles.statValue}>{bookingCount}</Text>
                      <Text style={styles.statLabel}>Bookings</Text>
                   </View>
                   <View style={styles.statItem}>
@@ -223,11 +234,11 @@ export default function ProfileScreen() {
                      <Text style={styles.statValue}>{favoriteCount}</Text>
                      <Text style={styles.statLabel}>Favorites</Text>
                   </View>
-                  <View style={styles.statItem}>
+                  {/* <View style={styles.statItem}>
                      <MaterialCommunityIcons name="dumbbell" size={24} color="#FF6D00" />
                      <Text style={styles.statValue}>27</Text>
                      <Text style={styles.statLabel}>Sessions</Text>
-                  </View>
+                  </View> */}
                </View>
 
                {/* MENU */}

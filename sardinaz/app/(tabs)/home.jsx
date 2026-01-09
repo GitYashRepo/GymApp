@@ -24,7 +24,7 @@ const PLACEHOLDER_IMAGE = {
    uri: "https://icon-library.com/images/no-picture-available-icon/no-picture-available-icon-1.jpg",
 };
 
-const PodCard = ({ pod, isFavorite, onToggleFavorite, onBookPress }) => {
+const PodCard = ({ pod, isFavorite, onToggleFavorite, onBookPress, isBooking }) => {
    const t = useTranslate();
 
    const imageSource =
@@ -67,10 +67,21 @@ const PodCard = ({ pod, isFavorite, onToggleFavorite, onBookPress }) => {
                <Text style={styles.priceUnit}> /30 min</Text>
             </Text>
 
-            <TouchableOpacity style={styles.bookButton} onPress={onBookPress}>
-               <Text style={styles.bookButtonText}>
-                  {t("common.book_now")}
-               </Text>
+            <TouchableOpacity
+               style={[
+                  styles.bookButton,
+                  isBooking && { opacity: 0.7 },
+               ]}
+               onPress={onBookPress}
+               disabled={isBooking}
+            >
+               {isBooking ? (
+                  <ActivityIndicator size="small" color="#000" />
+               ) : (
+                  <Text style={styles.bookButtonText}>
+                     {t("common.book_now")}
+                  </Text>
+               )}
             </TouchableOpacity>
          </View>
       </View>
@@ -86,6 +97,8 @@ export default function HomeScreen() {
    const [searchQuery, setSearchQuery] = useState("");
    const [favorites, setFavorites] = useState(new Set());
    const [updating, setUpdating] = useState(false);
+   const [bookingPodId, setBookingPodId] = useState(null)
+
 
    useEffect(() => {
       dispatch(fetchHomePods());
@@ -106,16 +119,24 @@ export default function HomeScreen() {
                { text: "Cancel", style: "cancel" },
                {
                   text: "Login",
-                  onPress: () => router.push("/login"), // change route if needed
+                  onPress: () => router.push("/login"),
                },
             ],
             { cancelable: true }
-         );
-         return;
+         )
+         return
       }
 
-      router.push(`/booking/${podId}`);
-   };
+      // 1️⃣ show loader immediately
+      setBookingPodId(podId)
+
+      // 2️⃣ wait for UI to paint
+      requestAnimationFrame(() => {
+         router.push(`/booking/${podId}`)
+      })
+   }
+
+
 
 
 
@@ -189,6 +210,7 @@ export default function HomeScreen() {
                      isFavorite={favorites.has(item._id)}
                      onToggleFavorite={toggleFavorite}
                      onBookPress={() => handleBookPress(item._id)}
+                     isBooking={bookingPodId === item._id}
                   />
                )}
                contentContainerStyle={styles.listContainer}

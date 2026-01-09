@@ -93,14 +93,14 @@ export default function BookingLayout() {
                icon="home"
             />
             <NavItem
-               name="classes"
-               label={t("nav.classes") ?? "Classes"}
-               icon="dumbbell"
-            />
-            <NavItem
                name="content"
                label={t("nav.content") ?? "Content"}
                icon="play-circle"
+            />
+            <NavItem
+               name="help"
+               label={t("nav.helpsupport") ?? "Help & Support"}
+               icon="help-circle"
             />
             <NavItem
                name={isLoggedIn ? "profile" : "login"}

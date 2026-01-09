@@ -1,6 +1,54 @@
+const mongoose = require("mongoose");
 const Booking = require("../models/Booking");
 const GymPod = require("../models/GymPod");
-const { generateSlots } = require("../utils/slotGenerator");
+const Notification = require("../models/Notification");
+
+exports.createMultiSlotBooking = async (req, res) => {
+  try {
+    const {
+  gymPodId,
+  slotDate,
+  startTime,
+  endTime,
+  slotsCount,
+  personsCount,
+  bookingType,
+} = req.body
+
+    const pod = await GymPod.findById(gymPodId);
+
+    const pricePerSlot = pod.pricePer30Min;
+    const totalAmount = pricePerSlot * slotsCount * personsCount;
+
+    const booking = await Booking.create({
+  user: req.user.id,
+  gymPod: gymPodId,
+  slotDate,
+  startTime: new Date(startTime),
+  endTime: new Date(endTime),
+  slotsCount: Number(slotsCount),
+  personsCount: Number(personsCount),
+  bookingType,
+  status: bookingType === "same_day" ? "confirmed" : "pending_payment",
+})
+
+
+    // 🔔 NOTIFICATION — BOOKING CREATED
+    await Notification.create({
+      user: req.user.id,
+      title: "Booking Created",
+      message: `Booking created for ${slotDate}`,
+    });
+
+    return res.status(201).json({
+      success: true,
+      data: booking,
+    });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+
 
 /**
  * 1️⃣ CREATE BOOKING (30 min)
@@ -82,41 +130,30 @@ exports.getPodAvailability = async (req, res) => {
     const { podId } = req.params;
     const { date } = req.query;
 
-    const pod = await GymPod.findById(podId);
-    if (!pod) {
-      return res.status(404).json({ message: "Pod not found" });
-    }
-
-    const slots = generateSlots(date);
-
     const bookings = await Booking.find({
       gymPod: podId,
       slotDate: date,
-      status: { $ne: "cancelled" }
+      status: { $ne: "cancelled" },
     });
 
     const slotMap = {};
 
     bookings.forEach(b => {
-      const key = b.startTime.toISOString();
-      slotMap[key] = (slotMap[key] || 0) + b.personsCount;
+      let cursor = new Date(b.startTime);
+      while (cursor < b.endTime) {
+        const key = cursor.getTime();
+        slotMap[key] = (slotMap[key] || 0) + b.personsCount;
+        cursor = new Date(cursor.getTime() + 30 * 60 * 1000);
+      }
     });
 
-    const response = slots.map(slot => {
-      const key = slot.startTime.toISOString();
-      const booked = slotMap[key] || 0;
-
-      return {
-        startTime: slot.startTime,
-        endTime: slot.endTime,
-        bookedPersons: booked,
-        maxCapacity: pod.maxCapacity,
-        isFull: booked >= pod.maxCapacity
-      };
+    res.json({
+      success: true,
+      data: Object.entries(slotMap).map(([t, p]) => ({
+        startTime: new Date(Number(t)),
+        bookedPersons: p,
+      })),
     });
-
-    res.json({ success: true, data: response });
-
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -192,40 +229,31 @@ exports.cancelBooking = async (req, res) => {
  */
 exports.uploadPaymentProof = async (req, res) => {
   try {
-    const booking = await Booking.findOne({
-      _id: req.params.id,
-      user: req.user.id
-    });
+    const booking = await Booking.findById(req.params.bookingId);
 
     if (!booking) {
       return res.status(404).json({ message: "Booking not found" });
     }
 
-    if (booking.status !== "pending_payment") {
-      return res.status(400).json({
-        message: "Payment already uploaded or booking processed"
-      });
-    }
-
     if (!req.file) {
-      return res.status(400).json({ message: "Payment screenshot required" });
+      return res.status(400).json({ message: "Payment image required" });
     }
 
     booking.paymentProof = {
-      image: `/uploads/payments/${req.file.filename}`,
-      uploadedAt: new Date()
+      image: req.file.path, // Cloudinary URL
+      uploadedAt: new Date(),
     };
 
     booking.status = "payment_uploaded";
-
     await booking.save();
 
-    res.status(200).json({
+    return res.json({
       success: true,
-      message: "Payment proof uploaded successfully"
+      booking,
     });
 
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    console.error("UPLOAD PAYMENT ERROR:", err);
+    return res.status(500).json({ message: "Payment upload failed" });
   }
 };

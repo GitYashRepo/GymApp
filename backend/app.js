@@ -10,6 +10,8 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/v1/api/users", require("./routes/userAuth.routes"));
 app.use("/v1/api/admin", require("./routes/adminAuth.routes"));
+app.use("/v1/api/bookings", require("./routes/booking.routes"));
+app.use("/v1/api/admin/bookings", require("./routes/adminBooking.routes"));
 app.use("/v1/api/pods", require("./routes/gymPod.routes"));
 
 module.exports = app;

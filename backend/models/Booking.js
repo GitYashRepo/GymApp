@@ -1,69 +1,43 @@
 const mongoose = require("mongoose");
 
 const bookingSchema = new mongoose.Schema({
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true
-  },
-  gymPod: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "GymPod",
-    required: true
-  },
+  user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  gymPod: { type: mongoose.Schema.Types.ObjectId, ref: "GymPod", required: true },
 
-  // SLOT INFO
-  slotDate: {
-    type: String, // YYYY-MM-DD
+  slotDate: { type: String, required: true }, // YYYY-MM-DD
+  startTime: { type: Date, required: true },
+  endTime: { type: Date, required: true },
+
+  slotsCount: { type: Number, required: true },
+  personsCount: { type: Number, required: true },
+
+  pricePerSlot: Number,
+  totalAmount: Number,
+
+  bookingType: {
+    type: String,
+    enum: ["same_day", "future_day"],
     required: true,
-    index: true
   },
 
-  startTime: {
-    type: Date,
-    required: true
-  },
+  paymentProof: {
+  image: { type: String },     // Cloudinary URL
+  uploadedAt: { type: Date },
+},
 
-  endTime: {
-    type: Date,
-    required: true
-  },
 
-  // CAPACITY
-  personsCount: {
-    type: Number,
-    required: true,
-    min: 1,
-  },
-
-  // PAYMENT FLOW
   status: {
     type: String,
     enum: [
       "confirmed",
-      "completed",
-      "cancelled"
+      "pending_payment",
+      "payment_uploaded",
+      "approved",
+      "rejected",
+      "cancelled",
     ],
-    default: "confirmed"
+    default: "pending_payment",
   },
-
-  paymentProof: {
-    image: String,
-    uploadedAt: Date
-  },
-
-  paymentVerified: {
-    type: Boolean,
-    default: false
-  },
-
-  verifiedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Admin"
-  },
-
-  verifiedAt: Date
 }, { timestamps: true });
 
-
-exports.Booking = mongoose.model("Booking", bookingSchema);
+module.exports = mongoose.model("Booking", bookingSchema);

@@ -5,8 +5,22 @@ import { store, persistor } from '../store';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
-
+import { useEffect } from "react"
+import * as Notifications from "expo-notifications"
 import { useColorScheme } from '../hooks/use-color-scheme';
+import { registerForPushNotificationsAsync } from '../utils/notifications';
+
+
+Notifications.setNotificationHandler({
+   handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+   }),
+})
+
+
+
 
 export const unstable_settings = {
    anchor: '(tabs)',
@@ -14,6 +28,11 @@ export const unstable_settings = {
 
 export default function RootLayout() {
    const colorScheme = useColorScheme();
+
+   useEffect(() => {
+      registerForPushNotificationsAsync()
+   }, [])
+
 
    return (
       <Provider store={store}>
