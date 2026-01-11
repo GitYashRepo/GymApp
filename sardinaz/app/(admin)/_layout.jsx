@@ -35,9 +35,9 @@ export default function AdminLayout() {
 
    const handleNav = (route) => {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-      if (route === "home") {
-         setActiveTab("home")
-         router.replace("/(tabs)/home")
+      if (route === "index") {
+         setActiveTab("/")
+         router.replace("/(tabs)/")
          return
       }
       setActiveTab(route)
@@ -87,7 +87,7 @@ export default function AdminLayout() {
          {/* 🔻 ADMIN BOTTOM NAV */}
          <View style={styles.bottomNav}>
             <NavItem
-               name="home"
+               name="index"
                label="Home"
                icon="home"
             />

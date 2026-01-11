@@ -5,16 +5,18 @@ import { useTranslate } from "../../localization/useTranslate";
 import { View, TouchableOpacity, Text, StyleSheet } from "react-native";
 import * as Haptics from "expo-haptics";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-
 import TopNavBar from "../../components/TopNavBar";
 import SideNavBar from "../../components/SideNavBar";
 import LanguageModal from "../../components/LanguageModal";
+import { usePathname } from "expo-router";
+
+
 
 export default function TabLayout() {
    const { user } = useSelector((state) => state.auth)
    const isAdmin = user?.role === "admin"
    const isLoggedIn = !!user
-   const [activeTab, setActiveTab] = useState("home");
+   // const [activeTab, setActiveTab] = useState("index");
    const [sidebarOpen, setSidebarOpen] = useState(false);
    const [languageModalOpen, setLanguageModalOpen] = useState(false);
 
@@ -23,23 +25,35 @@ export default function TabLayout() {
    // 🔥 Force re-render on language change
    const locale = useSelector((state) => state.language.locale);
 
+   const pathname = usePathname();
+
+   const isTabActive = (name) => {
+      if (name === "index") return pathname === "/";
+      return pathname.startsWith(`/${name}`);
+   };
+
+
    const profileRoute = isAdmin
       ? "/(admin)/profile"
       : isLoggedIn
          ? "profile"
          : "auth"
-
-   // 🔥 Reactive translator
    const t = useTranslate();
 
    const handleTabPress = (tabName) => {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      
       if (tabName === "profile" && isAdmin) {
-         router.push(profileRoute)
+         router.replace(profileRoute)
          return
       }
-      setActiveTab(tabName);
-      router.push(tabName);
+      if (tabName === "index") {
+         router.replace("/"); // root
+      } else {
+         router.replace(`/${tabName}`);
+      }
+      // setActiveTab(tabName);
+      // router.push(tabName);
    };
 
    const handleMenuPress = () => {
@@ -53,7 +67,7 @@ export default function TabLayout() {
    };
 
    const NavButton = ({ name, label, iconName }) => {
-      const isActive = activeTab === name;
+      const isActive = isTabActive(name);
 
       return (
          <TouchableOpacity
@@ -93,7 +107,7 @@ export default function TabLayout() {
                }}
             >
                <Tabs.Screen
-                  name="home"
+                  name="index"
                   options={{ title: t("nav.home") }}
                />
                {/* <Tabs.Screen
@@ -120,7 +134,7 @@ export default function TabLayout() {
          {/* 🔥 Custom Bottom Navigation */}
          <View style={styles.bottomNav}>
             <NavButton
-               name="home"
+               name="index"
                label={t("nav.home")}
                iconName="home"
             />

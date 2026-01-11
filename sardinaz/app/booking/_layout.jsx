@@ -1,4 +1,4 @@
-import { Stack, useRouter } from "expo-router"
+import { Stack, useRouter, usePathname } from "expo-router"
 import { useSelector } from "react-redux"
 import { useState } from "react"
 import { View, StyleSheet, TouchableOpacity, Text } from "react-native"
@@ -17,7 +17,15 @@ export default function BookingLayout() {
 
    const [sidebarOpen, setSidebarOpen] = useState(false)
    const [languageModalOpen, setLanguageModalOpen] = useState(false)
-   const [activeTab, setActiveTab] = useState("home")
+   // const [activeTab, setActiveTab] = useState("/")
+
+   const pathname = usePathname()
+
+   const isTabActive = (name) => {
+      if (name === "index") return pathname === "/"
+      return pathname.startsWith(`/${name}`)
+   }
+
 
    const t = useTranslate()
 
@@ -35,35 +43,41 @@ export default function BookingLayout() {
 
    const handleNav = (route) => {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-      setActiveTab(route)
 
-      // 🔥 ALL tabs live in /(tabs)/
-      router.replace(`/(tabs)/${route}`)
+      if (route === "index") {
+         router.replace("/")
+      } else {
+         router.replace(`/${route}`)
+      }
    }
 
    /* ------------------ NAV ITEM ------------------ */
 
-   const NavItem = ({ name, label, icon }) => (
-      <TouchableOpacity
-         style={styles.navItem}
-         onPress={() => handleNav(name)}
-         activeOpacity={0.7}
-      >
-         <MaterialCommunityIcons
-            name={icon}
-            size={24}
-            color={activeTab === name ? "#FF6D00" : "#999"}
-         />
-         <Text
-            style={[
-               styles.navLabel,
-               activeTab === name && styles.navLabelActive,
-            ]}
+   const NavItem = ({ name, label, icon }) => {
+      const isActive = isTabActive(name);
+      return (
+         < TouchableOpacity
+            style={styles.navItem}
+            onPress={() => handleNav(name)
+            }
+            activeOpacity={0.7}
          >
-            {label}
-         </Text>
-      </TouchableOpacity>
-   )
+            <MaterialCommunityIcons
+               name={icon}
+               size={24}
+               color={isActive ? "#FF6D00" : "#999"}
+            />
+            <Text
+               style={[
+                  styles.navLabel,
+                  isActive && styles.navLabelActive,
+               ]}
+            >
+               {label}
+            </Text>
+         </ TouchableOpacity>
+      )
+   }
 
    /* ------------------ RENDER ------------------ */
 
@@ -88,7 +102,7 @@ export default function BookingLayout() {
          {/* 🔻 BOTTOM NAV */}
          <View style={styles.bottomNav}>
             <NavItem
-               name="home"
+               name="index"
                label={t("nav.home") ?? "Home"}
                icon="home"
             />
@@ -103,7 +117,7 @@ export default function BookingLayout() {
                icon="help-circle"
             />
             <NavItem
-               name={isLoggedIn ? "profile" : "login"}
+               name={isLoggedIn ? "(tabs)/profile" : "(tabs)/login"}
                label={isLoggedIn ? t("nav.profile") : t("nav.login")}
                icon={isLoggedIn ? "account" : "login"}
             />
