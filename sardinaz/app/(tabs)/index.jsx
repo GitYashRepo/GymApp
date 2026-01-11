@@ -286,10 +286,14 @@ const styles = StyleSheet.create({
    container: { flex: 1, backgroundColor: "#1a1a1a" },
    searchBarContainer: {
       flexDirection: "row",
+      alignItems: "center",        // ✅ vertical centering
       backgroundColor: "#333",
-      margin: 16,
-      borderRadius: 8,
-      padding: 12,
+      marginHorizontal: 16,
+      marginTop: 16,
+      marginBottom: 8,
+      borderRadius: 12,
+      paddingHorizontal: 12,
+      height: 48,                  // ✅ consistent height
    },
    searchIcon: { marginRight: 8 },
    searchInput: { flex: 1, color: "#fff" },
