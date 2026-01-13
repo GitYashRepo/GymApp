@@ -11,7 +11,8 @@ import {
    SafeAreaView,
    Modal,
    Image,
-   Alert
+   Alert,
+   Linking
 } from "react-native"
 import { useLocalSearchParams } from "expo-router"
 import * as ImagePicker from "expo-image-picker"
@@ -21,6 +22,15 @@ import { createMultiSlotBooking } from "../../store/bookingSlice"
 import * as Notifications from "expo-notifications"
 import { useSelector } from "react-redux"
 import { fetchMyBookings } from "../../store/bookingSlice"
+
+const PAYLINKS = {
+   39: "https://www.sardinazgym.com/_paylink/AZutu0RK",
+   78: "https://www.sardinazgym.com/_paylink/AZu32vYB",
+   117: "https://www.sardinazgym.com/_paylink/AZu325tI",
+   156: "https://www.sardinazgym.com/_paylink/AZu33JMl",
+   234: "https://www.sardinazgym.com/_paylink/AZu34sfV",
+};
+
 
 
 const scheduleReminderNotification = async (startTime, podName) => {
@@ -149,7 +159,7 @@ export default function BookingScreen() {
    const [pod, setPod] = useState(null)
    const [availability, setAvailability] = useState({})
    const [selectedSlots, setSelectedSlots] = useState({})
-
+   const [hasClickedPayNow, setHasClickedPayNow] = useState(false);
    const [slotModal, setSlotModal] = useState(false)
    const [paymentModal, setPaymentModal] = useState(false)
 
@@ -168,6 +178,26 @@ export default function BookingScreen() {
    const isTodayBooking = Object.values(selectedSlots).some(
       s => s.dayId === getLocalDateId()
    )
+
+   const handlePayNow = async () => {
+      const link = PAYLINKS[totalAmount];
+
+      if (!link) {
+         Alert.alert(
+            "Payment Error",
+            "Invalid amount. Please reselect slots."
+         );
+         return;
+      }
+
+      try {
+         setHasClickedPayNow(true);
+         await Linking.openURL(link);
+      } catch (err) {
+         Alert.alert("Error", "Unable to open payment page");
+      }
+   };
+
 
 
    useEffect(() => {
@@ -361,7 +391,7 @@ export default function BookingScreen() {
          setSelectedSlots({});
          setPaymentImage(null);
          setPaymentModal(false);
-
+         setHasClickedPayNow(false);
       } catch (err) {
          console.log("❌ CONFIRM PAYMENT ERROR:", err);
          Alert.alert("Booking Failed", "Please try again later");
@@ -512,7 +542,10 @@ export default function BookingScreen() {
                <View style={styles.modal}>
                   <Pressable
                      style={styles.closeBtn}
-                     onPress={() => setSlotModal(false)}
+                     onPress={() => {
+                        setSlotModal(false)
+                        setHasClickedPayNow(false)
+                     }}
                   >
                      <Text style={styles.closeText}>✕</Text>
                   </Pressable>
@@ -570,7 +603,7 @@ export default function BookingScreen() {
                      Please pay amount {totalAmount} HKD
                   </Text>
 
-                  <Image
+                  {/* <Image
                      source={require("../../assets/images/qr.jpeg")}
                      style={{ width: 160, height: 160 }}
                   />
@@ -580,18 +613,53 @@ export default function BookingScreen() {
                      onPress={downloadQRCode}
                   >
                      <Text style={styles.downloadText}>DOWNLOAD QR CODE</Text>
+                  </Pressable> */}
+
+                  <Text style={styles.paymentInfo}>
+                     Please tap{" "}
+                     <Text style={{ fontWeight: "700", color: "#FF6D00" }}>
+                        Pay Now
+                     </Text>{" "}
+                     to complete your payment.
+                     {"\n\n"}
+                     You will be redirected to our secure payment page.
+                     After successful payment, return to the app and press{" "}
+                     <Text style={{ fontWeight: "700" }}>Confirm</Text>.
+                     {"\n\n"}
+                     Kindly keep your payment proof to show our Gym Pod staff for access.
+                  </Text>
+
+                  <Pressable
+                     style={styles.payNowBtn}
+                     onPress={handlePayNow}
+                  >
+                     <Text style={styles.payNowText}>PAY NOW</Text>
                   </Pressable>
 
 
+
                   {!isTodayBooking && (
-                     <Pressable style={styles.uploadBtn} onPress={pickImage}>
+                     <Pressable
+                        style={[
+                           styles.uploadBtn,
+                           !hasClickedPayNow && { opacity: 0.5 },
+                        ]}
+                        disabled={!hasClickedPayNow}
+                        onPress={pickImage}>
                         <Text style={styles.uploadText}>
                            Upload Payment Screenshot
                         </Text>
                      </Pressable>
                   )}
 
-                  <Pressable style={styles.confirmBtn} onPress={confirmPayment}>
+                  <Pressable
+                     style={[
+                        styles.confirmBtn,
+                        !hasClickedPayNow && { opacity: 0.5 },
+                     ]}
+                     disabled={!hasClickedPayNow}
+                     onPress={confirmPayment}
+                  >
                      <Text style={styles.confirmText}>CONFIRM</Text>
                   </Pressable>
                </View>
@@ -644,5 +712,25 @@ const styles = StyleSheet.create({
    slotMine: {
       backgroundColor: "#444",
       opacity: 0.6,
+   },
+   paymentInfo: {
+      color: "#ccc",
+      fontSize: 13,
+      textAlign: "center",
+      marginBottom: 16,
+      lineHeight: 18,
+   },
+   payNowBtn: {
+      backgroundColor: "#000",
+      borderWidth: 1,
+      borderColor: "#FF6D00",
+      paddingVertical: 10,
+      paddingHorizontal: 20,
+      borderRadius: 6,
+      marginBottom: 12,
+   },
+   payNowText: {
+      color: "#FF6D00",
+      fontWeight: "700",
    },
 })

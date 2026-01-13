@@ -18,6 +18,7 @@ import { useCallback } from "react";
 import { Modal } from "react-native"
 import * as ImagePicker from "expo-image-picker"
 import api from "../../services/api"
+import { useTranslate } from "../../localization/useTranslate";
 import { logout } from "../../store/authSlice"
 
 export default function ProfileScreen() {
@@ -32,6 +33,8 @@ export default function ProfileScreen() {
    const [favoriteCount, setFavoriteCount] = useState(0);
 
    const { token } = useSelector((state) => state.auth);
+
+   const t = useTranslate();
 
    const fetchBookingCount = async () => {
       try {
@@ -142,22 +145,22 @@ export default function ProfileScreen() {
    const menuItems = [
       {
          icon: "calendar",
-         label: "My Bookings",
+         labelKey: "side_nav.bookings",
          route: "/mybookings",
       },
       {
          icon: "heart",
-         label: "Favorites",
+         labelKey: "side_nav.favorites",
          route: "/favorites",
       },
       {
          icon: "lock",
-         label: "Privacy & Security",
+         labelKey: "side_nav.privacysecurity",
          route: "/privacy",
       },
       {
          icon: "help-circle",
-         label: "Help & Support",
+         labelKey: "side_nav.help",
          route: "/help",
       },
    ]
@@ -227,18 +230,13 @@ export default function ProfileScreen() {
                   <View style={styles.statItem}>
                      <MaterialCommunityIcons name="calendar-check" size={24} color="#FF6D00" />
                      <Text style={styles.statValue}>{bookingCount}</Text>
-                     <Text style={styles.statLabel}>Bookings</Text>
+                     <Text style={styles.statLabel}>{t("side_nav.bookings")}</Text>
                   </View>
                   <View style={styles.statItem}>
                      <MaterialCommunityIcons name="heart" size={24} color="#FF6D00" />
                      <Text style={styles.statValue}>{favoriteCount}</Text>
-                     <Text style={styles.statLabel}>Favorites</Text>
+                     <Text style={styles.statLabel}>{t("side_nav.favorites")}</Text>
                   </View>
-                  {/* <View style={styles.statItem}>
-                     <MaterialCommunityIcons name="dumbbell" size={24} color="#FF6D00" />
-                     <Text style={styles.statValue}>27</Text>
-                     <Text style={styles.statLabel}>Sessions</Text>
-                  </View> */}
                </View>
 
                {/* MENU */}
@@ -254,7 +252,7 @@ export default function ProfileScreen() {
                            size={20}
                            color="#FF6D00"
                         />
-                        <Text style={styles.menuLabel}>{item.label}</Text>
+                        <Text style={styles.menuLabel}>{t(item.labelKey)}</Text>
                         <MaterialCommunityIcons
                            name="chevron-right"
                            size={20}

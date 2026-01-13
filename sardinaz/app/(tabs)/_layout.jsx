@@ -38,11 +38,12 @@ export default function TabLayout() {
       : isLoggedIn
          ? "profile"
          : "auth"
+         
    const t = useTranslate();
 
    const handleTabPress = (tabName) => {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      
+
       if (tabName === "profile" && isAdmin) {
          router.replace(profileRoute)
          return

@@ -7,6 +7,7 @@ import {
    StyleSheet,
    TextInput,
    TouchableOpacity,
+   Pressable,
    Image,
    SafeAreaView,
    ActivityIndicator,
@@ -46,7 +47,7 @@ const PodCard = ({
 
          <View style={styles.capacityBar}>
             <Text style={styles.capacityText}>
-               Maximum Capacity: {pod.maxCapacity || 1} pax
+               {t("bookingCard.max_capacity")}: {pod.maxCapacity || 1} pax
             </Text>
 
             <TouchableOpacity onPress={() => onToggleFavorite(pod._id)}>
@@ -88,10 +89,19 @@ const PodCard = ({
 
                <TouchableOpacity
                   style={styles.subscriptionMiniButton}
-                  onPress={onSubscriptionPress}
+                  onPress={() => onSubscriptionPress("weekly")}
                >
                   <Text style={styles.subscriptionMiniButtonText}>
-                     Get Monthly Subscription
+                     {t("bookingCard.weeklysubscription")}
+                  </Text>
+               </TouchableOpacity>
+
+               <TouchableOpacity
+                  style={styles.subscriptionMiniButton}
+                  onPress={() => onSubscriptionPress("monthly")}
+               >
+                  <Text style={styles.subscriptionMiniButtonText}>
+                     {t("bookingCard.monthlysubscription")}
                   </Text>
                </TouchableOpacity>
             </View>
@@ -100,19 +110,37 @@ const PodCard = ({
    );
 };
 
+const SUBSCRIPTION_PAYLINKS = {
+   monthly: {
+      link: "https://www.sardinazgym.com/_paylink/AZu33yDG",
+      amount: 349,
+      label: "Monthly Subscription",
+   },
+   weekly: {
+      link: "https://www.sardinazgym.com/_paylink/AZu33jNt",
+      amount: 112,
+      label: "Weekly Subscription",
+   },
+};
+
+
 /* -------------------- HOME SCREEN -------------------- */
 export default function HomeScreen() {
    const router = useRouter();
    const dispatch = useDispatch();
    const { pods, loading } = useSelector((state) => state.pods);
    const { token } = useSelector((state) => state.auth);
-
+   const [subscriptionType, setSubscriptionType] = useState(null); // "monthly" | "weekly"
+   const [hasPaid, setHasPaid] = useState(false);
+   const [showConfirm, setShowConfirm] = useState(false);
    const [searchQuery, setSearchQuery] = useState("");
    const [favorites, setFavorites] = useState(new Set());
    const [updating, setUpdating] = useState(false);
    const [bookingPodId, setBookingPodId] = useState(null);
    const [subscriptionModalVisible, setSubscriptionModalVisible] = useState(false);
    const [selectedPod, setSelectedPod] = useState(null);
+
+   const t = useTranslate();
 
    useEffect(() => {
       dispatch(fetchHomePods());
@@ -182,36 +210,51 @@ export default function HomeScreen() {
       }
    };
 
-   const handleWhatsAppRedirect = () => {
-      if (!selectedPod) return;
-
-      const phoneNumber = "85293605397";
-
-      const message = `
-Hello Sardinaz Gym,
-
-I am interested in subscribing to your monthly plan for the Gym Pod.
-
-Pod Name: ${selectedPod.name}
-Location: ${selectedPod.locationName || "N/A"}
-
-Kindly share more details regarding the subscription.
-
-Thank you.
-    `.trim();
-
-      const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+   const handleSharePayment = () => {
+      const message = "Dear Sardinaz Gym, here is the payment screenshot.";
+      const url = `https://wa.me/85293605397?text=${encodeURIComponent(message)}`;
 
       Linking.openURL(url).catch(() =>
-         Alert.alert("Error", "WhatsApp is not installed on your device")
+         Alert.alert("Error", "WhatsApp is not installed")
       );
+
+      setShowConfirm(true);
    };
+
 
    const filteredPods = pods.filter((pod) =>
       (pod.locationName || pod.name || "")
          .toLowerCase()
          .includes(searchQuery.toLowerCase())
    );
+
+   const handlePayNow = async () => {
+      const config = SUBSCRIPTION_PAYLINKS[subscriptionType];
+      if (!config) return;
+
+      try {
+         setHasPaid(true);
+         await Linking.openURL(config.link);
+      } catch {
+         Alert.alert("Error", "Unable to open payment page");
+      }
+   };
+
+   const handleConfirmSubscription = () => {
+      const config = SUBSCRIPTION_PAYLINKS[subscriptionType];
+
+      Alert.alert(
+         "Booking Successful ✅",
+         `Your ${config.label} has been confirmed.\nAmount Paid: HKD ${config.amount}`
+      );
+
+      setSubscriptionModalVisible(false);
+      setSubscriptionType(null);
+      setHasPaid(false);
+      setShowConfirm(false);
+   };
+
+
 
    return (
       <SafeAreaView style={styles.container}>
@@ -240,8 +283,10 @@ Thank you.
                      isFavorite={favorites.has(item._id)}
                      onToggleFavorite={toggleFavorite}
                      onBookPress={() => handleBookPress(item._id)}
-                     onSubscriptionPress={() => {
-                        setSelectedPod(item);
+                     onSubscriptionPress={(type) => {
+                        setSubscriptionType(type);
+                        setHasPaid(false);
+                        setShowConfirm(false);
                         setSubscriptionModalVisible(true);
                      }}
                      isBooking={bookingPodId === item._id}
@@ -254,29 +299,54 @@ Thank you.
          <Modal transparent animationType="fade" visible={subscriptionModalVisible}>
             <View style={styles.modalOverlay}>
                <View style={styles.modalContainer}>
+
                   <Text style={styles.modalTitle}>
-                     Get monthly subscription at just 375 HKD !!
+                     {t(`bookingCard.${subscriptionType}subscription`)} - HK${SUBSCRIPTION_PAYLINKS[subscriptionType]?.amount}
                   </Text>
 
                   <Text style={styles.modalSubText}>
-                     {selectedPod?.name} • {selectedPod?.locationName}
+                     {t("bookingCard.tocompletepaymenttext")}
                   </Text>
 
-                  <TouchableOpacity
-                     style={styles.modalBookButton}
-                     onPress={handleWhatsAppRedirect}
-                  >
-                     <Text style={styles.modalBookButtonText}>Book Now</Text>
-                  </TouchableOpacity>
+
+                  <Text style={styles.modalHighlight}>
+                     {t("bookingCard.pleasetakescreenshottext")}
+                  </Text>
+
+                  <Pressable style={styles.modalBookButton} onPress={handlePayNow}>
+                     <Text style={styles.modalBookButtonText}>{t("bookingCard.paynowbtn")}</Text>
+                  </Pressable>
+
+                  {hasPaid && (
+                     <Pressable
+                        style={styles.whatsappBtn}
+                        onPress={handleSharePayment}
+                     >
+                        <Text style={styles.whatsappText}>
+                           {t("bookingCard.sharepaymentscreenshot")}
+                        </Text>
+                     </Pressable>
+                  )}
+
+                  {showConfirm && (
+                     <Pressable
+                        style={styles.confirmBtn}
+                        onPress={handleConfirmSubscription}
+                     >
+                        <Text style={styles.confirmText}>{t("bookingCard.confirmbtn")}</Text>
+                     </Pressable>
+                  )}
 
                   <TouchableOpacity
                      onPress={() => setSubscriptionModalVisible(false)}
                   >
-                     <Text style={styles.modalCloseText}>Cancel</Text>
+                     <Text style={styles.modalCloseText}>{t("bookingCard.cancel")}</Text>
                   </TouchableOpacity>
+
                </View>
             </View>
          </Modal>
+
       </SafeAreaView>
    );
 }
@@ -369,4 +439,38 @@ const styles = StyleSheet.create({
    },
    modalBookButtonText: { color: "#000", fontWeight: "bold" },
    modalCloseText: { color: "#aaa" },
+   modalHighlight: {
+      color: "#FF6D00",
+      fontWeight: "700",
+      textAlign: "center",
+      marginVertical: 12,
+   },
+
+   whatsappBtn: {
+      backgroundColor: "#25D366",
+      paddingVertical: 12,
+      paddingHorizontal: 20,
+      borderRadius: 25,
+      marginBottom: 10,
+   },
+
+   whatsappText: {
+      color: "#000",
+      fontWeight: "700",
+   },
+
+   confirmBtn: {
+      backgroundColor: "#000",
+      borderWidth: 1,
+      borderColor: "#FF6D00",
+      paddingVertical: 12,
+      paddingHorizontal: 20,
+      borderRadius: 25,
+      marginBottom: 10,
+   },
+
+   confirmText: {
+      color: "#FF6D00",
+      fontWeight: "700",
+   },
 });

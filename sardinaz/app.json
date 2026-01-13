@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "sardinaz",
+    "name": "Sardinaz Gym",
     "slug": "sardinaz-gym",
+    "icon": "./assets/images/icon.png",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
     "scheme": "sardinaz",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
