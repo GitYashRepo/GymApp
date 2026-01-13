@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux"
 import { useState, useEffect } from "react"
 import { loginUser, loginAdmin } from "../../store/authSlice"
 import { useRouter } from "expo-router"
+import { useTranslate } from "../../localization/useTranslate"
 import { MaterialCommunityIcons } from "@expo/vector-icons"
 
 
@@ -15,7 +16,7 @@ export default function LoginScreen() {
    const [form, setForm] = useState({ email: "", password: "" })
    const [showPassword, setShowPassword] = useState(false)
 
-
+   const t = useTranslate();
 
    useEffect(() => {
       if (!user) return
@@ -23,7 +24,7 @@ export default function LoginScreen() {
       if (user.role === "admin") {
          router.replace("/(admin)/profile")
       } else {
-         router.replace("/(tabs)/")
+         router.replace("/")
       }
    }, [user])
 
@@ -36,7 +37,7 @@ export default function LoginScreen() {
    return (
       <View style={styles.container}>
          <Text style={styles.title}>
-            {isAdmin ? "Admin Login" : "User Login"}
+            {isAdmin ? t("loginpage.loginasadmin") : t("loginpage.userlogin")}
          </Text>
 
          <TextInput
@@ -67,18 +68,18 @@ export default function LoginScreen() {
          {error && <Text style={styles.error}>{error}</Text>}
 
          <TouchableOpacity style={styles.button} onPress={handleLogin}>
-            <Text style={styles.buttonText}>Login</Text>
+            <Text style={styles.buttonText}>{t("loginpage.login")}</Text>
          </TouchableOpacity>
 
          <TouchableOpacity onPress={() => setIsAdmin(!isAdmin)}>
             <Text style={styles.switch}>
-               {isAdmin ? "Login as User" : "Login as Admin"}
+               {isAdmin ? t("loginpage.loginasuser") : t("loginpage.loginasadmin")}
             </Text>
          </TouchableOpacity>
 
          {!isAdmin && (
             <TouchableOpacity onPress={() => router.push("/(tabs)/register")}>
-               <Text style={styles.register}>Create Account</Text>
+               <Text style={styles.register}>{t("loginpage.createnewaccount")}</Text>
             </TouchableOpacity>
          )}
       </View>
