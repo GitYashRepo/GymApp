@@ -353,7 +353,7 @@ export default function HomeScreen() {
 
 /* -------------------- STYLES -------------------- */
 const styles = StyleSheet.create({
-   container: { flex: 1, backgroundColor: "#1a1a1a" },
+   container: { flex: 1, backgroundColor: "#1a1a1a", marginBottom: 80 },
    searchBarContainer: {
       flexDirection: "row",
       alignItems: "center",        // ✅ vertical centering
@@ -385,7 +385,7 @@ const styles = StyleSheet.create({
    addressText: { color: "#aaa", marginVertical: 6 },
    priceText: { color: "#FF6D00", fontWeight: "bold" },
 
-   buttonRow: { flexDirection: "row", gap: 10, marginTop: 12 },
+   buttonRow: { flexDirection: "column", gap: 10, marginTop: 12 },
 
    bookButton: {
       flex: 1,
@@ -400,6 +400,8 @@ const styles = StyleSheet.create({
       backgroundColor: "#333",
       borderWidth: 1,
       borderColor: "#FF6D00",
+      flex: 1,
+      alignItems: "center",
       borderRadius: 20,
       paddingHorizontal: 16,
       justifyContent: "center",
@@ -407,6 +409,7 @@ const styles = StyleSheet.create({
    subscriptionMiniButtonText: {
       color: "#FF6D00",
       fontWeight: "bold",
+      paddingVertical: 10,
       fontSize: 12,
    },
 

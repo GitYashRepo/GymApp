@@ -15,12 +15,12 @@ export default function AdminDashboard() {
             <Text style={styles.cardText}>➕ Create GymPod</Text>
          </TouchableOpacity>
 
-         <TouchableOpacity
+         {/* <TouchableOpacity
             style={styles.card}
             onPress={() => router.push("/(admin)/bookings")}
          >
             <Text style={styles.cardText}>📋 View Bookings</Text>
-         </TouchableOpacity>
+         </TouchableOpacity> */}
 
          <TouchableOpacity
             style={styles.card}
