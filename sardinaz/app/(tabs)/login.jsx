@@ -22,7 +22,7 @@ export default function LoginScreen() {
       if (!user) return
 
       if (user.role === "admin") {
-         router.replace("/(admin)/profile")
+         router.replace("/")
       } else {
          router.replace("/")
       }
